@@ -8,14 +8,15 @@ export default defineConfig({
       "/api": {
         target: "http://localhost:8080",
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api/, "/"),
+        // УБРАТЬ rewrite - бэкенд должен получать /api/anomalies
+        // rewrite: (path) => path.replace(/^\/api/, "/"),
       },
     },
-    watch: { // нужно для hot-reload при использовании docker
+    watch: {
         usePolling: true,
     }, 
-    host: true, // нужно, чтобы правильно работал маппинг портов в docker-контейнере
-    strictPort: true, // необязательно
-    port: 3000, // можете заменить на любой другой порт
+    host: true,
+    strictPort: true,
+    port: 3000,
   },
 });
