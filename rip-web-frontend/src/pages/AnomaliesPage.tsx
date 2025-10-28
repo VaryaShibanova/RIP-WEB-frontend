@@ -118,13 +118,14 @@ const AnomaliesPage: React.FC = () => {
             </button>
           </div>
 
-          {/* Иконка корзины / дерева */}
-          <div className="tree-icon" title="Моя заявка">
+          {/* Иконка корзины - ПРОСТО НЕАКТИВНАЯ БЕЗ JS */}
+          <div className="tree-icon disabled" title="Корзина временно недоступна">
             <img 
               src="/images/mock/user-icon.jpg" 
               alt="Заявка" 
+              className="grayscale"
             />
-            <span className="tree-count">2</span>
+            {/*<span className="tree-count disabled">0</span>*/}
           </div>
         </div>
       </div>

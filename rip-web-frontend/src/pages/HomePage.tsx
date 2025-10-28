@@ -30,12 +30,14 @@ const HomePage: React.FC = () => {
               >
                 Каталог аномалий
               </Button>
+              {/*
               <Button
                 className="hero-button secondary"
                 onClick={() => navigate('/my-request')}
               >
                 Моя заявка
               </Button>
+              */}
             </div>
           </div>
         </div>

@@ -611,7 +611,24 @@ body {
     justify-content: center;
 }
 
-/* АДАПТИВНОСТЬ */
+/* Стили для неактивной корзины */
+.tree-icon.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.tree-count.disabled {
+  background-color: #9198AA !important; /* Серый цвет */
+  color: #666 !important;
+}
+
+.grayscale {
+  filter: grayscale(100%);
+  opacity: 0.6;
+}
+
+
+/* АДАПТИВНОСТЬ 
 @media (max-width: 768px) {
     .hero-section {
         padding: 40px 25px;
@@ -638,7 +655,7 @@ body {
     .decoration-large,
     .decoration-medium,
     .decoration-small {
-        display: none; /* Скрываем декорации на мобильных */
+        display: none; 
     }
     
     .anomalies-grid {
@@ -654,4 +671,4 @@ body {
     .tree-icon {
         margin-left: 0;
     }
-}
+}*/

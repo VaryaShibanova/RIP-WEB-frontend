@@ -16,7 +16,7 @@ const CustomNavbar: React.FC = () => {
           />
           <span className="navbar-brand-text">ДЕНДРОАНАЛИЗ</span>
         </Navbar.Brand>
-        
+        {/*
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
         <Navbar.Collapse id="basic-navbar-nav">
           <Nav className="ms-auto">
@@ -36,6 +36,7 @@ const CustomNavbar: React.FC = () => {
             </Nav.Link>
           </Nav>
         </Navbar.Collapse>
+        */}
       </div>
     </Navbar>
   );
