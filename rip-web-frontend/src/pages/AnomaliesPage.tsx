@@ -11,10 +11,7 @@ const AnomaliesPage: React.FC = () => {
   const [anomalies, setAnomalies] = useState<AnomalyShortResponse[]>([]);
   const [filteredAnomalies, setFilteredAnomalies] = useState<AnomalyShortResponse[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filters, setFilters] = useState({
-    name: '',
-    year: ''
-  });
+  const [searchTerm, setSearchTerm] = useState('');
   
   const navigate = useNavigate();
 
@@ -24,7 +21,7 @@ const AnomaliesPage: React.FC = () => {
 
   useEffect(() => {
     applyFilters();
-  }, [anomalies, filters]);
+  }, [anomalies, searchTerm]);
 
   const loadAnomalies = async () => {
     try {
@@ -39,34 +36,24 @@ const AnomaliesPage: React.FC = () => {
   };
 
   const applyFilters = () => {
-    let filtered = anomalies;
-
-    if (filters.name) {
-      filtered = filtered.filter(anomaly =>
-        anomaly.name.toLowerCase().includes(filters.name.toLowerCase())
-      );
+    if (!searchTerm) {
+      setFilteredAnomalies(anomalies);
+      return;
     }
 
-    if (filters.year) {
-      filtered = filtered.filter(anomaly =>
-        anomaly.year.toString().includes(filters.year)
-      );
-    }
+    const filtered = anomalies.filter(anomaly =>
+      // Ищем по названию ИЛИ по году
+      anomaly.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      anomaly.year.toString().includes(searchTerm)
+    );
 
     setFilteredAnomalies(filtered);
-  };
-
-  const handleFilterChange = (key: string, value: string) => {
-    setFilters(prev => ({
-      ...prev,
-      [key]: value
-    }));
   };
 
   const handleSearch = async () => {
     try {
       setLoading(true);
-      const response = await apiService.getAnomalies(filters.name, filters.year);
+      const response = await apiService.getAnomalies(searchTerm, searchTerm);
       setAnomalies(response.anomalies);
     } catch (error) {
       console.error('Error searching anomalies:', error);
@@ -80,12 +67,12 @@ const AnomaliesPage: React.FC = () => {
   };
 
   if (loading) {
-  return (
-    <Container className="page-container">
-      <LoadingSpinner size="lg" text="Загрузка аномалий..." />
-    </Container>
-  );
-}
+    return (
+      <Container className="page-container">
+        <LoadingSpinner size="lg" text="Загрузка аномалий..." />
+      </Container>
+    );
+  }
 
   return (
     <Container className="page-container">
@@ -105,9 +92,9 @@ const AnomaliesPage: React.FC = () => {
             <input 
               type="text" 
               className="search-input-field" 
-              placeholder="Поиск..."
-              value={filters.name}
-              onChange={(e) => handleFilterChange('name', e.target.value)}
+              placeholder="Поиск по названию или году..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
             />
             <button className="search-button" onClick={handleSearch}>
@@ -118,14 +105,12 @@ const AnomaliesPage: React.FC = () => {
             </button>
           </div>
 
-          {/* Иконка корзины - ПРОСТО НЕАКТИВНАЯ БЕЗ JS */}
           <div className="tree-icon disabled" title="Корзина временно недоступна">
             <img 
               src="/images/mock/user-icon.jpg" 
               alt="Заявка" 
               className="grayscale"
             />
-            {/*<span className="tree-count disabled">0</span>*/}
           </div>
         </div>
       </div>
