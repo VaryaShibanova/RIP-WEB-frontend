@@ -1,4 +1,3 @@
-// AnomaliesPage.tsx - упрощаем работу с корзиной
 import React, { useState, useEffect } from 'react';
 import { Container } from 'react-bootstrap';
 import type { AnomalyShortResponse } from '../types';
@@ -7,23 +6,38 @@ import AnomalyCard from '../components/AnomalyCard';
 import Breadcrumbs from '../components/Breadcrumbs';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { useNavigate } from 'react-router-dom';
+import { useSearch } from '../hooks/useSearch';
+import { useCart } from '../hooks/useCart';
 import searchIcon from '/images/mock/search-icon.png';
 import userIcon from '/images/mock/user-icon.jpg';
 
 const AnomaliesPage: React.FC = () => {
   const [anomalies, setAnomalies] = useState<AnomalyShortResponse[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
   
+  const { 
+    searchTerm, 
+    updateSearchTerm, 
+    saveSearchToHistory
+  } = useSearch();
+  
+  // Убрали неиспользуемый itemCount
+  const { syncCartWithApi } = useCart();
   const navigate = useNavigate();
 
   useEffect(() => {
-    loadAnomalies();
-    // Временно добавить для теста
-    apiService.getTreeCart().then(cart => {
-      console.log('Cart data:', cart);
-    });
+    // Автоматически применяем сохраненный поиск и синхронизируем корзину
+    loadAnomaliesWithCurrentSearch();
+    syncCartWithApi();
   }, []);
+
+  const loadAnomaliesWithCurrentSearch = async () => {
+    if (searchTerm.trim()) {
+      await loadAnomalies(searchTerm.trim(), searchTerm.trim());
+    } else {
+      await loadAnomalies();
+    }
+  };
 
   const loadAnomalies = async (searchName?: string, searchYear?: string) => {
     try {
@@ -43,6 +57,7 @@ const AnomaliesPage: React.FC = () => {
       return;
     }
 
+    saveSearchToHistory(searchTerm);
     await loadAnomalies(searchTerm.trim(), searchTerm.trim());
   };
 
@@ -84,14 +99,11 @@ const AnomaliesPage: React.FC = () => {
               className="search-input-field" 
               placeholder="Поиск..."
               value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              onChange={(e) => updateSearchTerm(e.target.value)}
               onKeyPress={handleKeyPress}
             />
             <button className="search-button" onClick={handleSearch}>
-              <img 
-                src={searchIcon} 
-                alt="Поиск" 
-              />
+              <img src={searchIcon} alt="Поиск" />
             </button>
           </div>
 

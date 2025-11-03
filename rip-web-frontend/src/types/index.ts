@@ -56,3 +56,4 @@ export interface AnomalyShortResponse {
   image_url: string;
   year: number;
 }
+

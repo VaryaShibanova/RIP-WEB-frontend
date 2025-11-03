@@ -1,9 +1,11 @@
 import { configureStore } from '@reduxjs/toolkit'
+import cartSlice from '../slices/cartSlice'
+import searchSlice from '../slices/searchSlice'
 
-// Пока создадим пустой store, потом добавим редьюсеры
 export const store = configureStore({
   reducer: {
-    // Здесь будут ваши редьюсеры
+    cart: cartSlice,
+    search: searchSlice,
   },
 })
 

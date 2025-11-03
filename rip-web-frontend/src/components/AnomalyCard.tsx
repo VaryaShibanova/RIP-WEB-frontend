@@ -1,5 +1,6 @@
 import React from 'react';
 import type { AnomalyShortResponse } from '../types';
+import { useCart } from '../hooks/useCart';
 import defaultImage from '/images/mock/main-page.png';
 import addIcon from '/images/mock/add-b.png';
 
@@ -9,11 +10,13 @@ interface AnomalyCardProps {
 }
 
 const AnomalyCard: React.FC<AnomalyCardProps> = ({ anomaly, onViewDetails }) => {
+  const { addItemToCart } = useCart();
 
   const handleAddToTree = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    //console.log('Добавить аномалию в заявку:', anomaly.id);
+    addItemToCart(anomaly);
+    console.log('Добавлено в корзину:', anomaly.id);
   };
 
   return (
