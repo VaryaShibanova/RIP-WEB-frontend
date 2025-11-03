@@ -4,6 +4,8 @@ import { useParams, useNavigate } from 'react-router-dom';
 import type { AnomalyDetailResponse } from '../types';
 import { apiService } from '../services/api';
 import Breadcrumbs from '../components/Breadcrumbs';
+import defaultImage from '/images/mock/main-page.png';
+import closeIcon from '/images/mock/close-b.jpg';
 
 const AnomalyDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -57,8 +59,6 @@ const AnomalyDetailPage: React.FC = () => {
     );
   }
 
-  const defaultImage = "/images/mock/main-page.png";
-
   return (
     <div className="detail-page">
       <Container className="page-container">
@@ -77,7 +77,7 @@ const AnomalyDetailPage: React.FC = () => {
             className="close-button"
             onClick={handleBack}
           >
-            <img src="/images/mock/close-b.jpg" alt="Закрыть" />
+            <img src={closeIcon} alt="Закрыть" />
           </Button>
         </div>
         

@@ -7,6 +7,8 @@ import AnomalyCard from '../components/AnomalyCard';
 import Breadcrumbs from '../components/Breadcrumbs';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { useNavigate } from 'react-router-dom';
+import searchIcon from '/images/mock/search-icon.png';
+import userIcon from '/images/mock/user-icon.jpg';
 
 const AnomaliesPage: React.FC = () => {
   const [anomalies, setAnomalies] = useState<AnomalyShortResponse[]>([]);
@@ -87,7 +89,7 @@ const AnomaliesPage: React.FC = () => {
             />
             <button className="search-button" onClick={handleSearch}>
               <img 
-                src="/images/mock/search-icon.png" 
+                src={searchIcon} 
                 alt="Поиск" 
               />
             </button>
@@ -96,7 +98,7 @@ const AnomaliesPage: React.FC = () => {
           {/* Корзина остается серой и не кликабельной */}
           <div className="tree-icon disabled" title="Корзина временно недоступна">
             <img 
-              src="/images/mock/user-icon.jpg" 
+              src={userIcon} 
               alt="Заявка" 
               className="grayscale"
             />

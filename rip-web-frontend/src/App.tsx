@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import type { FC } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom'; // Уберите BrowserRouter as Router
 import { Container } from 'react-bootstrap';
 import CustomNavbar from './components/Navbar';
 import HomePage from './pages/HomePage';
@@ -19,28 +19,28 @@ const App: FC = () => {
   }, []);
 
   return (
-    <Router>
-      <div className="d-flex flex-column min-vh-100">
-        <CustomNavbar />
-        <main className="flex-grow-1 py-4">
-          <Routes>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/anomalies" element={<AnomaliesPage />} />
-            <Route path="/anomalies/:id" element={<AnomalyDetailPage />} />
-            <Route path="/my-request" element={
-              <div className="home-page">
-                <Container className="page-container"> 
-                  <div className="text-center">
-                    <h1 style={{ color: 'white', marginBottom: '30px' }}>Моя заявка</h1>
-                    <p style={{ color: 'white' }}>Страница в разработке...</p>
-                  </div>
-                </Container>
-              </div>
-            } />
-          </Routes>
-        </main>
-      </div>
-    </Router>
+    // УБЕРИТЕ <Router> и </Router>
+    <div className="d-flex flex-column min-vh-100">
+      <CustomNavbar />
+      <main className="flex-grow-1 py-4">
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/anomalies" element={<AnomaliesPage />} />
+          <Route path="/anomalies/:id" element={<AnomalyDetailPage />} />
+          <Route path="/my-request" element={
+            <div className="home-page">
+              <Container className="page-container"> 
+                <div className="text-center">
+                  <h1 style={{ color: 'white', marginBottom: '30px' }}>Моя заявка</h1>
+                  <p style={{ color: 'white' }}>Страница в разработке...</p>
+                </div>
+              </Container>
+            </div>
+          } />
+        </Routes>
+      </main>
+    </div>
+    // УБЕРИТЕ </Router>
   );
 };
 

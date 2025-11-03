@@ -1,5 +1,7 @@
 import React from 'react';
 import type { AnomalyShortResponse } from '../types';
+import defaultImage from '/images/mock/main-page.png';
+import addIcon from '/images/mock/add-b.png';
 
 interface AnomalyCardProps {
   anomaly: AnomalyShortResponse;
@@ -7,7 +9,6 @@ interface AnomalyCardProps {
 }
 
 const AnomalyCard: React.FC<AnomalyCardProps> = ({ anomaly, onViewDetails }) => {
-  const defaultImage = "http://localhost:9000/images/default-anomaly.jpg";
 
   const handleAddToTree = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -35,7 +36,7 @@ const AnomalyCard: React.FC<AnomalyCardProps> = ({ anomaly, onViewDetails }) => 
             title="Добавить в исследование"
             onClick={handleAddToTree}
           >
-            <img src="/images/mock/add-b.png" alt="Добавить" />
+            <img src={addIcon} alt="Добавить" />
           </button>
         </div>
         <div className="year">Год начала: {anomaly.year} г.</div>

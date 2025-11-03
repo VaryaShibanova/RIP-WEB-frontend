@@ -1,6 +1,7 @@
 import React from 'react';
 import { Navbar } from 'react-bootstrap';
 import { Link } from 'react-router-dom';
+import logo from '/images/mock/logo.png';
 
 const CustomNavbar: React.FC = () => {
   return (
@@ -8,7 +9,7 @@ const CustomNavbar: React.FC = () => {
       <div className="navbar-container">
         <Navbar.Brand as={Link} to="/" className="navbar-brand-with-logo">
           <img 
-            src="/images/mock/logo.png" 
+            src={logo} 
             alt="Дендроанализ" 
             className="navbar-logo"
           />
