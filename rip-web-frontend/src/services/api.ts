@@ -52,13 +52,59 @@ class ApiService {
     const queryString = params.toString();
     const endpoint = `/anomalies${queryString ? `?${queryString}` : ''}`;
     
-    return this.fetchWithFallback(endpoint, { anomalies: mockAnomalies });
+    try {
+      const response = await fetch(`${API_BASE_URL}${endpoint}`);
+      if (!response.ok) throw new Error('API not available');
+      return await response.json();
+    } catch (error) {
+      console.warn('Using mock data due to API error:', error);
+      
+      // ✅ ТОЧНАЯ РЕАЛИЗАЦИЯ КАК НА БЭКЕНДЕ
+      let filteredAnomalies = mockAnomalies;
+      
+      // Если есть параметры поиска - фильтруем
+      if (name || year) {
+        filteredAnomalies = mockAnomalies.filter(anomaly => {
+          let matches = false;
+          
+          // Поиск по названию (ILIKE)
+          if (name && anomaly.name.toLowerCase().includes(name.toLowerCase())) {
+            matches = true;
+          }
+          
+          // Поиск по году (частичное совпадение строки)
+          if (year && anomaly.year.toString().includes(year)) {
+            matches = true;
+          }
+          
+          return matches;
+        });
+      }
+      
+      return { anomalies: filteredAnomalies };
+    }
   }
 
   async getAnomaly(id: number): Promise<AnomalyDetailResponse> {
     const anomaly = mockAnomalies.find(a => a.id === id) || mockAnomalies[0];
     return this.fetchWithFallback(`/anomalies/${id}`, anomaly);
   }
+
+  // api.ts - обновляем метод getTreeCart
+  async getTreeCart(): Promise<{ user_id: number; item_count: number }> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/trees/cart`);
+      if (!response.ok) throw new Error('API not available');
+      return await response.json();
+    } catch (error) {
+      console.warn('Using mock cart data due to API error:', error);
+      // Возвращаем статические данные при ошибке
+      return {
+        user_id: -1,
+        item_count: 0
+      };
+    }
+}
 
 }
 

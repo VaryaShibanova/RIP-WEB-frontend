@@ -1,3 +1,4 @@
+// AnomaliesPage.tsx - упрощаем работу с корзиной
 import React, { useState, useEffect } from 'react';
 import { Container } from 'react-bootstrap';
 import type { AnomalyShortResponse } from '../types';
@@ -9,7 +10,6 @@ import { useNavigate } from 'react-router-dom';
 
 const AnomaliesPage: React.FC = () => {
   const [anomalies, setAnomalies] = useState<AnomalyShortResponse[]>([]);
-  const [filteredAnomalies, setFilteredAnomalies] = useState<AnomalyShortResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   
@@ -17,16 +17,16 @@ const AnomaliesPage: React.FC = () => {
 
   useEffect(() => {
     loadAnomalies();
+    // Временно добавить для теста
+    apiService.getTreeCart().then(cart => {
+      console.log('Cart data:', cart);
+    });
   }, []);
 
-  useEffect(() => {
-    applyFilters();
-  }, [anomalies, searchTerm]);
-
-  const loadAnomalies = async () => {
+  const loadAnomalies = async (searchName?: string, searchYear?: string) => {
     try {
       setLoading(true);
-      const response = await apiService.getAnomalies();
+      const response = await apiService.getAnomalies(searchName, searchYear);
       setAnomalies(response.anomalies);
     } catch (error) {
       console.error('Error loading anomalies:', error);
@@ -35,30 +35,18 @@ const AnomaliesPage: React.FC = () => {
     }
   };
 
-  const applyFilters = () => {
-    if (!searchTerm) {
-      setFilteredAnomalies(anomalies);
+  const handleSearch = async () => {
+    if (!searchTerm.trim()) {
+      await loadAnomalies();
       return;
     }
 
-    const filtered = anomalies.filter(anomaly =>
-      // Ищем по названию ИЛИ по году
-      anomaly.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      anomaly.year.toString().includes(searchTerm)
-    );
-
-    setFilteredAnomalies(filtered);
+    await loadAnomalies(searchTerm.trim(), searchTerm.trim());
   };
 
-  const handleSearch = async () => {
-    try {
-      setLoading(true);
-      const response = await apiService.getAnomalies(searchTerm, searchTerm);
-      setAnomalies(response.anomalies);
-    } catch (error) {
-      console.error('Error searching anomalies:', error);
-    } finally {
-      setLoading(false);
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleSearch();
     }
   };
 
@@ -92,10 +80,10 @@ const AnomaliesPage: React.FC = () => {
             <input 
               type="text" 
               className="search-input-field" 
-              placeholder="Поиск по названию или году..."
+              placeholder="Поиск..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+              onKeyPress={handleKeyPress}
             />
             <button className="search-button" onClick={handleSearch}>
               <img 
@@ -105,6 +93,7 @@ const AnomaliesPage: React.FC = () => {
             </button>
           </div>
 
+          {/* Корзина остается серой и не кликабельной */}
           <div className="tree-icon disabled" title="Корзина временно недоступна">
             <img 
               src="/images/mock/user-icon.jpg" 
@@ -117,7 +106,7 @@ const AnomaliesPage: React.FC = () => {
 
       {/* Сетка карточек */}
       <div className="anomalies-grid">
-        {filteredAnomalies.map(anomaly => (
+        {anomalies.map(anomaly => (
           <AnomalyCard 
             key={anomaly.id}
             anomaly={anomaly} 
@@ -126,7 +115,7 @@ const AnomaliesPage: React.FC = () => {
         ))}
       </div>
 
-      {filteredAnomalies.length === 0 && (
+      {anomalies.length === 0 && (
         <div className="text-center" style={{ color: 'white', padding: '50px' }}>
           <p>Аномалии не найдены. Попробуйте изменить параметры поиска.</p>
         </div>

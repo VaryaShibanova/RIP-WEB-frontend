@@ -12,7 +12,7 @@ const AnomalyCard: React.FC<AnomalyCardProps> = ({ anomaly, onViewDetails }) => 
   const handleAddToTree = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    console.log('Добавить аномалию в заявку:', anomaly.id);
+    //console.log('Добавить аномалию в заявку:', anomaly.id);
   };
 
   return (
