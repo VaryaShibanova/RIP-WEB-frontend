@@ -1,10 +1,8 @@
 import React from 'react';
-import { Navbar, Nav } from 'react-bootstrap';
-import { Link, useLocation } from 'react-router-dom';
+import { Navbar } from 'react-bootstrap';
+import { Link } from 'react-router-dom';
 
 const CustomNavbar: React.FC = () => {
-  const location = useLocation();
-
   return (
     <Navbar bg="dark" variant="dark" expand="lg" className="custom-navbar">
       <div className="navbar-container">
