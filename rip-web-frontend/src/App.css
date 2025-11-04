@@ -444,6 +444,9 @@ body {
   align-items: center;
   justify-content: center;
   word-break: break-word;
+  /* Улучшения для адаптивности */
+  hyphens: auto; /* Перенос слов */
+  overflow-wrap: break-word; /* Перенос длинных слов */
 }
 
 
@@ -461,6 +464,8 @@ body {
   padding: 0;
   flex-shrink: 0;
   margin-left: auto;
+  /* Улучшения для адаптивности */
+  min-width: 36px; /* Гарантирует минимальный размер */
 }
 
 .add-to-tree-btn img {
@@ -828,5 +833,66 @@ body {
         width: 40px;
         height: 40px;
     }
+
+    /* ДОПОЛНИТЕЛЬНЫЕ МЕДИА-ЗАПРОСЫ ДЛЯ МЕЛКИХ УСТРОЙСТВ */
+@media (max-width: 480px) {
+  .anomaly-header {
+    flex-direction: column;
+    gap: 12px;
+    text-align: center;
+  }
+  
+  .anomaly-card h3 {
+    font-size: 16px;
+    min-height: auto;
+    padding: 5px 0;
+    line-height: 1.4;
+    margin-bottom: 5px;
+  }
+  
+  .add-to-tree-btn {
+    width: 44px;
+    height: 44px;
+    margin-left: 0;
+    order: -1; /* Перемещает кнопку вверх */
+    align-self: center; /* Центрирует кнопку */
+  }
+  
+  .add-to-tree-btn img {
+    width: 22px;
+    height: 22px;
+  }
+  
+  /* Улучшение для очень маленьких экранов */
+  .anomalies-grid {
+    grid-template-columns: 1fr;
+    gap: 15px;
+    padding: 0 10px 40px;
+  }
+  
+  .anomaly-card {
+    margin: 0 5px;
+    padding: 15px;
+  }
+}
+
+/* УЛУЧШЕНИЯ ДЛЯ ПЛАНШЕТОВ */
+@media (min-width: 481px) and (max-width: 768px) {
+  .anomaly-header {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 15px;
+  }
+  
+  .anomaly-card h3 {
+    font-size: 17px;
+    flex-basis: 100%; /* Занимает всю ширину */
+    order: -1; /* Перемещает заголовок вверх */
+  }
+  
+  .add-to-tree-btn {
+    margin-left: 0;
+  }
+}
 }
 
