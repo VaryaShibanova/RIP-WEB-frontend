@@ -833,8 +833,9 @@ body {
         width: 40px;
         height: 40px;
     }
+}
 
-    /* ДОПОЛНИТЕЛЬНЫЕ МЕДИА-ЗАПРОСЫ ДЛЯ МЕЛКИХ УСТРОЙСТВ */
+/* ДОПОЛНИТЕЛЬНЫЕ МЕДИА-ЗАПРОСЫ ДЛЯ МЕЛКИХ УСТРОЙСТВ */
 @media (max-width: 480px) {
   .anomaly-header {
     flex-direction: column;
@@ -893,6 +894,6 @@ body {
   .add-to-tree-btn {
     margin-left: 0;
   }
-}
+
 }
 
