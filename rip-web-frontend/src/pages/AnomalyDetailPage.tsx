@@ -4,6 +4,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import type { AnomalyDetailResponse } from '../types';
 import { apiService } from '../services/api';
 import Breadcrumbs from '../components/Breadcrumbs';
+import LoadingSpinner from '../components/LoadingSpinner'; // ← ДОБАВИТЬ ИМПОРТ
 import defaultImage from '/images/mock/main-page.png';
 import closeIcon from '/images/mock/close-b.jpg';
 
@@ -12,6 +13,7 @@ const AnomalyDetailPage: React.FC = () => {
   const navigate = useNavigate();
   const [anomaly, setAnomaly] = useState<AnomalyDetailResponse | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string>('');
 
   useEffect(() => {
     if (id) {
@@ -22,10 +24,12 @@ const AnomalyDetailPage: React.FC = () => {
   const loadAnomaly = async (anomalyId: number) => {
     try {
       setLoading(true);
+      setError('');
       const data = await apiService.getAnomaly(anomalyId);
       setAnomaly(data);
     } catch (error) {
       console.error('Error loading anomaly details:', error);
+      setError('Не удалось загрузить данные аномалии');
     } finally {
       setLoading(false);
     }
@@ -39,20 +43,21 @@ const AnomalyDetailPage: React.FC = () => {
     return (
       <div className="detail-page">
         <Container className="page-container">
-          <div className="text-center" style={{ color: 'white', padding: '50px' }}>
-            Загрузка деталей аномалии...
-          </div>
+          <LoadingSpinner size="lg" text="Загрузка деталей аномалии..." />
         </Container>
       </div>
     );
   }
 
-  if (!anomaly) {
+  if (error || !anomaly) {
     return (
       <div className="detail-page">
         <Container className="page-container">
-          <div className="text-center" style={{ color: 'white', padding: '50px' }}>
-            Аномалия не найдена
+          <div className="text-center" style={{ color: '#060F1E', padding: '50px' }}>
+            <p>{error || 'Аномалия не найдена'}</p>
+            <Button variant="primary" onClick={handleBack}>
+              Вернуться к каталогу
+            </Button>
           </div>
         </Container>
       </div>

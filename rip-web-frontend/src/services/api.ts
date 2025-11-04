@@ -1,3 +1,4 @@
+// services/api.ts
 import type { 
   Anomaly, 
   AnomaliesListResponse, 
@@ -31,15 +32,31 @@ const mockAnomalies: Anomaly[] = [
   }
 ];
 
-
 class ApiService {
-  private async fetchWithFallback<T>(endpoint: string, mockData: T): Promise<T> {
+  private async fetchWithTimeout<T>(endpoint: string, timeout = 2000): Promise<T> {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeout);
+
     try {
-      const response = await fetch(`${API_BASE_URL}${endpoint}`);
-      if (!response.ok) throw new Error('API not available');
+      const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+        signal: controller.signal
+      });
+      
+      clearTimeout(timeoutId);
+      
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
       return await response.json();
     } catch (error) {
-      console.warn('Using mock data due to API error:', error);
+      clearTimeout(timeoutId);
+      throw error;
+    }
+  }
+
+  private async fetchWithFallback<T>(endpoint: string, mockData: T, timeout = 2000): Promise<T> {
+    try {
+      return await this.fetchWithTimeout<T>(endpoint, timeout);
+    } catch (error) {
+      console.warn(`API ${endpoint} failed, using mock data:`, error);
       return mockData;
     }
   }
@@ -52,60 +69,41 @@ class ApiService {
     const queryString = params.toString();
     const endpoint = `/anomalies${queryString ? `?${queryString}` : ''}`;
     
-    try {
-      const response = await fetch(`${API_BASE_URL}${endpoint}`);
-      if (!response.ok) throw new Error('API not available');
-      return await response.json();
-    } catch (error) {
-      console.warn('Using mock data due to API error:', error);
-      
-      // ✅ ТОЧНАЯ РЕАЛИЗАЦИЯ КАК НА БЭКЕНДЕ
-      let filteredAnomalies = mockAnomalies;
-      
-      // Если есть параметры поиска - фильтруем
-      if (name || year) {
-        filteredAnomalies = mockAnomalies.filter(anomaly => {
-          let matches = false;
-          
-          // Поиск по названию (ILIKE)
-          if (name && anomaly.name.toLowerCase().includes(name.toLowerCase())) {
-            matches = true;
-          }
-          
-          // Поиск по году (частичное совпадение строки)
-          if (year && anomaly.year.toString().includes(year)) {
-            matches = true;
-          }
-          
-          return matches;
-        });
-      }
-      
-      return { anomalies: filteredAnomalies };
-    }
+    // Таймаут 2 секунды вместо бесконечного ожидания
+    return this.fetchWithFallback(endpoint, this.getMockAnomalies(name, year), 2000);
   }
 
   async getAnomaly(id: number): Promise<AnomalyDetailResponse> {
-    const anomaly = mockAnomalies.find(a => a.id === id) || mockAnomalies[0];
-    return this.fetchWithFallback(`/anomalies/${id}`, anomaly);
+    // Таймаут 2 секунды
+    return this.fetchWithFallback(`/anomalies/${id}`, this.getMockAnomaly(id), 2000);
   }
 
-  // api.ts - обновляем метод getTreeCart
   async getTreeCart(): Promise<{ user_id: number; item_count: number }> {
-    try {
-      const response = await fetch(`${API_BASE_URL}/trees/cart`);
-      if (!response.ok) throw new Error('API not available');
-      return await response.json();
-    } catch (error) {
-      console.warn('Using mock cart data due to API error:', error);
-      // Возвращаем статические данные при ошибке
-      return {
-        user_id: -1,
-        item_count: 0
-      };
-    }
-}
+    // Таймаут 1 секунда для корзины
+    return this.fetchWithFallback(
+      '/trees/cart', 
+      { user_id: -1, item_count: 0 }, 
+      1000
+    );
+  }
 
+  private getMockAnomalies(name?: string, year?: string): AnomaliesListResponse {
+    let filteredAnomalies = mockAnomalies;
+    
+    if (name || year) {
+      filteredAnomalies = mockAnomalies.filter(anomaly => {
+        const nameMatch = name ? anomaly.name.toLowerCase().includes(name.toLowerCase()) : false;
+        const yearMatch = year ? anomaly.year.toString().includes(year) : false;
+        return nameMatch || yearMatch;
+      });
+    }
+    
+    return { anomalies: filteredAnomalies };
+  }
+
+  private getMockAnomaly(id: number): AnomalyDetailResponse {
+    return mockAnomalies.find(a => a.id === id) || mockAnomalies[0];
+  }
 }
 
 export const apiService = new ApiService();
