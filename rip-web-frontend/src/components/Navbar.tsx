@@ -1,9 +1,17 @@
-import React from 'react';
-import { Navbar } from 'react-bootstrap';
-import { Link } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Navbar, Dropdown } from 'react-bootstrap';
+import { Link, useNavigate } from 'react-router-dom';
 import logo from '/images/mock/logo.png';
 
 const CustomNavbar: React.FC = () => {
+  const [showDropdown, setShowDropdown] = useState(false);
+  const navigate = useNavigate();
+
+  const handleCatalogClick = () => {
+    navigate('/anomalies');
+    setShowDropdown(false);
+  };
+
   return (
     <Navbar bg="dark" variant="dark" expand="lg" className="custom-navbar">
       <div className="navbar-container">
@@ -15,30 +23,53 @@ const CustomNavbar: React.FC = () => {
           />
           <span className="navbar-brand-text">ДЕНДРОАНАЛИЗ</span>
         </Navbar.Brand>
-        {/*
-        <Navbar.Toggle aria-controls="basic-navbar-nav" />
-        <Navbar.Collapse id="basic-navbar-nav">
-          <Nav className="ms-auto">
-            <Nav.Link 
-              as={Link} 
-              to="/anomalies" 
-              className={location.pathname === '/anomalies' ? 'nav-link active' : 'nav-link'}
-            >
-              Каталог аномалий
-            </Nav.Link>
-            <Nav.Link 
-              as={Link} 
-              to="/my-request" 
-              className={location.pathname === '/my-request' ? 'nav-link active' : 'nav-link'}
-            >
-              Моя заявка
-            </Nav.Link>
-          </Nav>
-        </Navbar.Collapse>
-        */}
+        
+        {/* Навигационное меню с гамбургер-иконкой */}
+        <div className="navbar-nav-container">
+          <Dropdown 
+            show={showDropdown} 
+            onToggle={(isOpen) => setShowDropdown(isOpen)}
+            className="navbar-dropdown"
+          >
+            <Dropdown.Toggle as={CustomToggle} id="navbar-dropdown">
+              {/* Гамбургер иконка */}
+              <div className="hamburger-icon">
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
+            </Dropdown.Toggle>
+
+            <Dropdown.Menu className="navbar-dropdown-menu">
+              <Dropdown.Item 
+                onClick={handleCatalogClick}
+                className="navbar-dropdown-item"
+              >
+                Каталог аномалий
+              </Dropdown.Item>
+              {/* Можно добавить другие пункты меню позже */}
+            </Dropdown.Menu>
+          </Dropdown>
+        </div>
       </div>
     </Navbar>
   );
 };
+
+// Кастомный компонент для кнопки Dropdown.Toggle
+const CustomToggle = React.forwardRef<HTMLDivElement, any>(
+  ({ children, onClick }, ref) => (
+    <div
+      ref={ref}
+      onClick={(e) => {
+        e.preventDefault();
+        onClick(e);
+      }}
+      className="navbar-dropdown-toggle"
+    >
+      {children}
+    </div>
+  )
+);
 
 export default CustomNavbar;

@@ -21,7 +21,6 @@ const AnomaliesPage: React.FC = () => {
     saveSearchToHistory
   } = useSearch();
   
-  // Убрали неиспользуемый itemCount
   const { syncCartWithApi } = useCart();
   const navigate = useNavigate();
 
@@ -107,13 +106,15 @@ const AnomaliesPage: React.FC = () => {
             </button>
           </div>
 
-          {/* Корзина остается серой и не кликабельной */}
-          <div className="tree-icon disabled" title="Корзина временно недоступна">
-            <img 
-              src={userIcon} 
-              alt="Заявка" 
-              className="grayscale"
-            />
+          {/* Корзина всегда справа от поиска */}
+          <div className="tree-icon-container">
+            <div className="tree-icon disabled" title="Корзина временно недоступна">
+              <img 
+                src={userIcon} 
+                alt="Заявка" 
+                className="grayscale"
+              />
+            </div>
           </div>
         </div>
       </div>

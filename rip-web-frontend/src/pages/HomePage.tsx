@@ -1,10 +1,7 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Button, Container } from 'react-bootstrap';
+import { Container } from 'react-bootstrap';
 
 const HomePage: React.FC = () => {
-  const navigate = useNavigate();
-
   return (
     <div className="home-page">
       {/* Декоративные элементы */}
@@ -12,7 +9,7 @@ const HomePage: React.FC = () => {
       <div className="decoration decoration-medium"></div>
       <div className="decoration decoration-small"></div>
       
-      <Container className="page-container"> {/* ДОБАВЬТЕ ЭТОТ КОНТЕЙНЕР */}
+      <Container className="page-container">
         <div className="home-page-content">
           <div className="hero-section">
             <h1 className="hero-title">
@@ -24,20 +21,7 @@ const HomePage: React.FC = () => {
               исследовательскую заявку.
             </p>
             <div className="hero-buttons">
-              <Button
-                className="hero-button"
-                onClick={() => navigate('/anomalies')}
-              >
-                Каталог аномалий
-              </Button>
-              {/*
-              <Button
-                className="hero-button secondary"
-                onClick={() => navigate('/my-request')}
-              >
-                Моя заявка
-              </Button>
-              */}
+              {/* Кнопка "Каталог аномалий" удалена - теперь в навигации */}
             </div>
           </div>
         </div>

@@ -7,33 +7,33 @@ import type {
 
 const API_BASE_URL = '/api';
 
-// Mock данные
+// Mock данные с обновленными путями
 const mockAnomalies: Anomaly[] = [
   {
     id: 1,
     name: "Извержение вулкана Уайнапутина",
     description: "На срезе дерева, жившего в 1600 году, хорошо заметно одно очень узкое и темное годовое кольцо. Оно резко контрастирует с более широкими светлыми кольцами до и после него. Это кольцо 1601 года.",
-    image_url: "/images/mock/main-page.png",
+    image_url: "/RIP-WEB-frontend/images/mock/main-page.png",
     year: 1600 
   },
   {
     id: 2,
     name: "Извержение Тамбора", 
     description: "На срезе дерева хорошо видно три аномальных кольца старше. Такие кольца 1815 года характеризуются узкими, фрагментированными темными кольцами 1816 года и относительно широкими кольцами 1817 года.",
-    image_url: "/images/mock/main-page.png",
+    image_url: "/RIP-WEB-frontend/images/mock/main-page.png",
     year: 1815
   },
   {
     id: 3,
     name: "Извержение Каракатау",
     description: "На срезе дерева, примерно на 15-16 кольцах от края, видны аномальные кольца второго следования 1884 года, например фрагментированное кольцо 1883 года и относительно широкими кольцами 1882 года.",
-    image_url: "/images/mock/main-page.png", 
+    image_url: "/RIP-WEB-frontend/images/mock/main-page.png", 
     year: 1883
   }
 ];
 
 class ApiService {
-  private async fetchWithTimeout<T>(endpoint: string, timeout = 2000): Promise<T> {
+  private async fetchWithTimeout<T>(endpoint: string, timeout = 500): Promise<T> {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), timeout);
 
@@ -52,12 +52,14 @@ class ApiService {
     }
   }
 
-  private async fetchWithFallback<T>(endpoint: string, mockData: T, timeout = 2000): Promise<T> {
+  private async fetchWithFallback<T>(endpoint: string, mockData: T, timeout = 500): Promise<T> {
     try {
       return await this.fetchWithTimeout<T>(endpoint, timeout);
     } catch (error) {
       console.warn(`API ${endpoint} failed, using mock data:`, error);
-      return mockData;
+      return new Promise((resolve) => {
+        setTimeout(() => resolve(mockData), 100);
+      });
     }
   }
 
@@ -69,21 +71,18 @@ class ApiService {
     const queryString = params.toString();
     const endpoint = `/anomalies${queryString ? `?${queryString}` : ''}`;
     
-    // Таймаут 2 секунды вместо бесконечного ожидания
-    return this.fetchWithFallback(endpoint, this.getMockAnomalies(name, year), 2000);
+    return this.fetchWithFallback(endpoint, this.getMockAnomalies(name, year), 500);
   }
 
   async getAnomaly(id: number): Promise<AnomalyDetailResponse> {
-    // Таймаут 2 секунды
-    return this.fetchWithFallback(`/anomalies/${id}`, this.getMockAnomaly(id), 2000);
+    return this.fetchWithFallback(`/anomalies/${id}`, this.getMockAnomaly(id), 500);
   }
 
   async getTreeCart(): Promise<{ user_id: number; item_count: number }> {
-    // Таймаут 1 секунда для корзины
     return this.fetchWithFallback(
       '/trees/cart', 
       { user_id: -1, item_count: 0 }, 
-      1000
+      300
     );
   }
 
