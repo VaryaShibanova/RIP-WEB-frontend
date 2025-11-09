@@ -1,5 +1,6 @@
+// TreePage.tsx
 import React, { useState, useEffect } from 'react';
-import { Container, Table, Button, Badge, Form, Row, Col, Card } from 'react-bootstrap';
+import { Container, Table, Button, Form, Row, Col, Card } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../hooks/redux';
 import { fetchUserTrees } from '../slices/treeSlice';
@@ -18,32 +19,42 @@ const TreePage: React.FC = () => {
     dispatch(fetchUserTrees());
   }, [dispatch]);
 
-  const getStatusVariant = (status: string) => {
-    switch (status) {
-      case 'черновик': return 'secondary';
-      case 'сформирован': return 'warning';
-      case 'завершён': return 'success';
-      case 'отклонён': return 'danger';
-      case 'удалён': return 'dark';
-      default: return 'primary';
-    }
-  };
-
   const handleCreateNewTree = () => {
-    // Создаем заявку через добавление первой аномалии
     navigate('/anomalies');
   };
 
   const filteredTrees = trees.filter(tree => {
+    // Фильтрация по статусу
     if (statusFilter && tree.status !== statusFilter) return false;
+    
+    // Фильтрация по количеству аномалий
     if (anomaliesFilter) {
       const anomaliesCount = tree.amount_of_anomalies || 0;
-      if (anomaliesFilter === '1-5' && (anomaliesCount < 1 || anomaliesCount > 5)) return false;
-      if (anomaliesFilter === '6-10' && (anomaliesCount < 6 || anomaliesCount > 10)) return false;
-      if (anomaliesFilter === '10+' && anomaliesCount <= 10) return false;
+      switch (anomaliesFilter) {
+        case '1-5':
+          return anomaliesCount >= 1 && anomaliesCount <= 5;
+        case '6-10':
+          return anomaliesCount >= 6 && anomaliesCount <= 10;
+        case '10+':
+          return anomaliesCount > 10;
+        default:
+          return true;
+      }
     }
+    
     return true;
   });
+
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case 'черновик': return 'Черновик';
+      case 'сформирован': return 'Сформирован';
+      case 'завершён': return 'Завершён';
+      case 'отклонён': return 'Отклонён';
+      case 'удалён': return 'Удалён';
+      default: return status || 'Черновик';
+    }
+  };
 
   if (isLoading) {
     return <LoadingSpinner text="Загрузка заявок..." />;
@@ -61,7 +72,7 @@ const TreePage: React.FC = () => {
         <Button 
           onClick={handleCreateNewTree}
           variant="primary"
-          size="lg"
+          className="btn-custom-primary"
         >
           Создать новую заявку
         </Button>
@@ -112,7 +123,6 @@ const TreePage: React.FC = () => {
       <Table striped bordered hover responsive className="bg-dark">
         <thead className="table-dark">
           <tr>
-            <th>ID</th>
             <th>Статус</th>
             <th>Количество аномалий</th>
             <th>Финальный год</th>
@@ -123,25 +133,32 @@ const TreePage: React.FC = () => {
         <tbody>
           {filteredTrees.length === 0 ? (
             <tr>
-              <td colSpan={6} className="text-center py-4">
+              <td colSpan={5} className="text-center py-4">
                 {trees.length === 0 ? 'У вас пока нет заявок' : 'Заявки не найдены по выбранным фильтрам'}
               </td>
             </tr>
           ) : (
             filteredTrees.map((tree) => (
               <tr key={tree.id}>
-                <td><strong>#{tree.id}</strong></td>
                 <td>
-                  <Badge bg={getStatusVariant(tree.status || '')}>
-                    {tree.status || 'черновик'}
-                  </Badge>
-                </td>
-                <td>{tree.amount_of_anomalies || 0}</td>
-                <td>
-                  {tree.final_year || '-'}
+                  <span className="status-text">
+                    {getStatusText(tree.status || '')}
+                  </span>
                 </td>
                 <td>
-                  {tree.moderator || '-'}
+                  <span className="anomalies-count">
+                    {tree.amount_of_anomalies || 0}
+                  </span>
+                </td>
+                <td>
+                  <span className="final-year">
+                    {tree.final_year ? `${tree.final_year} г.` : 'Не рассчитан'}
+                  </span>
+                </td>
+                <td>
+                  <span className="moderator">
+                    {tree.moderator || 'Не назначен'}
+                  </span>
                 </td>
                 <td>
                   <Button
