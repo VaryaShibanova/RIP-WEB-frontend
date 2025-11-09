@@ -6,7 +6,7 @@ import type {
   UpdateTreeRequest
 } from '../types'
 
-interface TreeState {
+export interface TreeState {
   trees: TreeShortResponse[]
   currentTree: TreeDetailResponse | null
   isLoading: boolean

@@ -1,7 +1,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import { api } from '../api'
 
-interface CartState {
+export interface CartState {
   itemCount: number
   userId: number
   treeId: number

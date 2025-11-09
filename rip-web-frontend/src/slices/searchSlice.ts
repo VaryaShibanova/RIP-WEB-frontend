@@ -1,5 +1,15 @@
 import { createSlice } from '@reduxjs/toolkit'
-import type { SearchState } from '../types'
+
+export interface SearchState {
+  searchTerm: string;
+  searchYear: string;
+  filters: {
+    yearFrom?: string;
+    yearTo?: string;
+    type?: string;
+  };
+  recentSearches: string[];
+}
 
 const initialState: SearchState = {
   searchTerm: '',
