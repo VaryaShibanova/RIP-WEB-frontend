@@ -50,8 +50,8 @@ const ProfilePage: React.FC = () => {
 
       <Row className="justify-content-center">
         <Col md={8} lg={6}>
-          <Card className="shadow">
-            <Card.Header className="bg-dark text-white">
+          <Card className="shadow profile-card">
+            <Card.Header className="bg-primary text-white text-center">
               <h4 className="mb-0">Личный кабинет</h4>
             </Card.Header>
             <Card.Body className="p-4">
@@ -62,48 +62,47 @@ const ProfilePage: React.FC = () => {
               )}
 
               <Form>
-                <Form.Group className="mb-3">
-                  <Form.Label>ID пользователя</Form.Label>
-                  <Form.Control
-                    type="text"
-                    value={user?.id || ''}
-                    disabled
-                    plaintext
-                  />
-                </Form.Group>
-
-                <Form.Group className="mb-3">
-                  <Form.Label>Логин</Form.Label>
-                  <Form.Control
-                    type="text"
-                    value={login}
-                    onChange={(e) => setLogin(e.target.value)}
-                    disabled={!isEditing}
-                    isInvalid={!!error && error.includes('Логин')}
-                  />
-                  {!isEditing && (
-                    <Form.Text className="text-muted">
-                      Для изменения логина нажмите "Редактировать"
-                    </Form.Text>
-                  )}
+                <Form.Group className="mb-4">
+                  <Row className="align-items-center">
+                    <Col sm={4}>
+                      <Form.Label className="fw-bold mb-0">Логин</Form.Label>
+                    </Col>
+                    <Col sm={8}>
+                      {isEditing ? (
+                        <Form.Control
+                          type="text"
+                          value={login}
+                          onChange={(e) => setLogin(e.target.value)}
+                          isInvalid={!!error && error.includes('Логин')}
+                          className="profile-input"
+                        />
+                      ) : (
+                        <div className="profile-value">{user?.login}</div>
+                      )}
+                    </Col>
+                  </Row>
                 </Form.Group>
 
                 <Form.Group className="mb-4">
-                  <Form.Label>Роль</Form.Label>
-                  <Form.Control
-                    type="text"
-                    value={user?.is_moderator ? 'Модератор' : 'Пользователь'}
-                    disabled
-                    plaintext
-                  />
+                  <Row className="align-items-center">
+                    <Col sm={4}>
+                      <Form.Label className="fw-bold mb-0">Роль</Form.Label>
+                    </Col>
+                    <Col sm={8}>
+                      <div className="profile-value profile-role">
+                        {user?.is_moderator ? 'Модератор' : 'Пользователь'}
+                      </div>
+                    </Col>
+                  </Row>
                 </Form.Group>
 
-                <div className="d-flex gap-2">
+                <div className="d-flex gap-2 justify-content-center mt-4">
                   {!isEditing ? (
                     <Button
                       variant="primary"
                       onClick={() => setIsEditing(true)}
                       disabled={isLoading}
+                      className="px-4"
                     >
                       Редактировать
                     </Button>
@@ -113,6 +112,7 @@ const ProfilePage: React.FC = () => {
                         variant="success"
                         onClick={handleSave}
                         disabled={isLoading || login === user?.login}
+                        className="px-4"
                       >
                         {isLoading ? 'Сохранение...' : 'Сохранить'}
                       </Button>
@@ -120,6 +120,7 @@ const ProfilePage: React.FC = () => {
                         variant="secondary"
                         onClick={handleCancel}
                         disabled={isLoading}
+                        className="px-4"
                       >
                         Отмена
                       </Button>

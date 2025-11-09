@@ -22,7 +22,7 @@ const initialState: TreeState = {
 
 export const fetchUserTrees = createAsyncThunk(
   'trees/fetchUserTrees',
-  async (filters?: { status?: string; date_from?: string; date_to?: string }, { rejectWithValue }) => {
+  async (filters: { status?: string; date_from?: string; date_to?: string } | undefined, { rejectWithValue }) => {
     try {
       const response = await api.api.treesList(filters)
       return response.data.trees || []
@@ -58,16 +58,13 @@ export const addToTree = createAsyncThunk(
 
 export const updateTreeItem = createAsyncThunk(
   'trees/updateTreeItem',
-  async ({ 
-    treeId, 
-    anomalyId, 
-    anomalousRings 
-  }: { 
+  async (params: { 
     treeId: number; 
     anomalyId: number; 
     anomalousRings: string 
   }, { rejectWithValue }) => {
     try {
+      const { treeId, anomalyId, anomalousRings } = params;
       const response = await api.api.treesItemsUpdate(treeId, anomalyId, { anomalous_rings: anomalousRings })
       return response.data
     } catch (error: any) {
@@ -78,8 +75,9 @@ export const updateTreeItem = createAsyncThunk(
 
 export const removeFromTree = createAsyncThunk(
   'trees/removeFromTree',
-  async ({ treeId, anomalyId }: { treeId: number; anomalyId: number }, { rejectWithValue }) => {
+  async (params: { treeId: number; anomalyId: number }, { rejectWithValue }) => {
     try {
+      const { treeId, anomalyId } = params;
       await api.api.treesItemsDelete(treeId, anomalyId)
       return { treeId, anomalyId }
     } catch (error: any) {
@@ -102,8 +100,9 @@ export const submitTree = createAsyncThunk(
 
 export const updateTree = createAsyncThunk(
   'trees/updateTree',
-  async ({ treeId, data }: { treeId: number; data: UpdateTreeRequest }, { rejectWithValue }) => {
+  async (params: { treeId: number; data: UpdateTreeRequest }, { rejectWithValue }) => {
     try {
+      const { treeId, data } = params;
       const response = await api.api.treesUpdate(treeId, data)
       return response.data
     } catch (error: any) {

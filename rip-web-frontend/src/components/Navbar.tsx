@@ -4,7 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../hooks/redux';
 import { logoutUser } from '../slices/authSlice';
 import { useCart } from '../hooks/useCart';
-import { useTrees } from '../hooks/useTrees';
+import { useTrees } from '../hooks/useTree';
 import logo from '/images/mock/logo.png';
 
 const CustomNavbar: React.FC = () => {
@@ -82,24 +82,7 @@ const CustomNavbar: React.FC = () => {
         </Navbar.Brand>
         
         <div className="navbar-nav-container">
-          <div className="tree-icon-container me-3">
-            <div 
-              className={`tree-icon ${!isAuthenticated ? 'disabled' : ''}`}
-              onClick={handleCartClick}
-              title={isAuthenticated ? "Моя заявка" : "Войдите для доступа к заявке"}
-            >
-              <img 
-                src="/images/mock/user-icon.jpg" 
-                alt="Заявка" 
-                className={!isAuthenticated ? "grayscale" : ""}
-              />
-              {isAuthenticated && itemCount > 0 && (
-                <div className="tree-count">
-                  {itemCount > 9 ? '9+' : itemCount}
-                </div>
-              )}
-            </div>
-          </div>
+          {/* УДАЛЕН БЛОК С TREE-ICON-CONTAINER */}
 
           <Dropdown 
             show={showDropdown} 

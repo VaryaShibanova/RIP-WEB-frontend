@@ -10,6 +10,7 @@ import { useSearch } from '../hooks/useSearch';
 import { useCart } from '../hooks/useCart';
 import { useAuth } from '../hooks/useAuth';
 import searchIcon from '/images/mock/search-icon.png';
+import userIcon from '/images/mock/user-icon.jpg';
 
 const AnomaliesPage: React.FC = () => {
   const [anomalies, setAnomalies] = useState<AnomalyShortResponse[]>([]);
@@ -21,7 +22,7 @@ const AnomaliesPage: React.FC = () => {
     saveSearchToHistory
   } = useSearch();
   
-  const { syncCartWithApi } = useCart();
+  const { syncCartWithApi, itemCount } = useCart();
   const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
@@ -72,6 +73,14 @@ const AnomaliesPage: React.FC = () => {
     navigate(`/anomalies/${id}`);
   };
 
+  const handleCartClick = () => {
+    if (isAuthenticated) {
+      navigate('/trees');
+    } else {
+      navigate('/login');
+    }
+  };
+
   if (loading) {
     return (
       <Container className="page-container">
@@ -105,6 +114,26 @@ const AnomaliesPage: React.FC = () => {
             <button className="search-button" onClick={handleSearch}>
               <img src={searchIcon} alt="Поиск" />
             </button>
+          </div>
+          
+          {/* Иконка заявки справа от поиска */}
+          <div className="tree-icon-container">
+            <div 
+              className={`tree-icon ${!isAuthenticated ? 'disabled' : ''}`}
+              onClick={handleCartClick}
+              title={isAuthenticated ? "Мои заявки" : "Войдите для доступа к заявкам"}
+            >
+              <img 
+                src={userIcon} 
+                alt="Мои заявки" 
+                className={!isAuthenticated ? "grayscale" : ""}
+              />
+              {isAuthenticated && itemCount > 0 && (
+                <div className="tree-count">
+                  {itemCount > 9 ? '9+' : itemCount}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>

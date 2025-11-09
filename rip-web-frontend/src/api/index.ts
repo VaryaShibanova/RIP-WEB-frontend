@@ -2,7 +2,7 @@ import { Api } from './Api';
 
 // Один раз объявляем и экспортируем
 export const api = new Api({
-  baseURL: 'http://localhost:8080/api',
+  baseURL: 'http://localhost:8080',
 });
 
 // Настраиваем интерцепторы

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Table, Button, Badge, Form, Row, Col, Card } from 'react-bootstrap';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../hooks/redux';
 import { fetchUserTrees } from '../slices/treeSlice';
 import Breadcrumbs from '../components/Breadcrumbs';
@@ -8,10 +8,10 @@ import LoadingSpinner from '../components/LoadingSpinner';
 
 const TreePage: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState('');
-  const [dateFrom, setDateFrom] = useState('');
-  const [dateTo, setDateTo] = useState('');
+  const [anomaliesFilter, setAnomaliesFilter] = useState('');
 
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
   const { trees, isLoading, error } = useAppSelector((state) => state.trees);
 
   useEffect(() => {
@@ -29,8 +29,19 @@ const TreePage: React.FC = () => {
     }
   };
 
+  const handleCreateNewTree = () => {
+    // Создаем заявку через добавление первой аномалии
+    navigate('/anomalies');
+  };
+
   const filteredTrees = trees.filter(tree => {
     if (statusFilter && tree.status !== statusFilter) return false;
+    if (anomaliesFilter) {
+      const anomaliesCount = tree.amount_of_anomalies || 0;
+      if (anomaliesFilter === '1-5' && (anomaliesCount < 1 || anomaliesCount > 5)) return false;
+      if (anomaliesFilter === '6-10' && (anomaliesCount < 6 || anomaliesCount > 10)) return false;
+      if (anomaliesFilter === '10+' && anomaliesCount <= 10) return false;
+    }
     return true;
   });
 
@@ -48,9 +59,9 @@ const TreePage: React.FC = () => {
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h1>Мои заявки на исследование</h1>
         <Button 
-          as={Link} 
-          to="/anomalies" 
+          onClick={handleCreateNewTree}
           variant="primary"
+          size="lg"
         >
           Создать новую заявку
         </Button>
@@ -59,9 +70,9 @@ const TreePage: React.FC = () => {
       <Card className="mb-4">
         <Card.Body>
           <Row>
-            <Col md={4}>
+            <Col md={6}>
               <Form.Group>
-                <Form.Label>Статус</Form.Label>
+                <Form.Label><strong>Статус</strong></Form.Label>
                 <Form.Select
                   value={statusFilter}
                   onChange={(e) => setStatusFilter(e.target.value)}
@@ -74,24 +85,18 @@ const TreePage: React.FC = () => {
                 </Form.Select>
               </Form.Group>
             </Col>
-            <Col md={4}>
+            <Col md={6}>
               <Form.Group>
-                <Form.Label>Дата от</Form.Label>
-                <Form.Control
-                  type="date"
-                  value={dateFrom}
-                  onChange={(e) => setDateFrom(e.target.value)}
-                />
-              </Form.Group>
-            </Col>
-            <Col md={4}>
-              <Form.Group>
-                <Form.Label>Дата до</Form.Label>
-                <Form.Control
-                  type="date"
-                  value={dateTo}
-                  onChange={(e) => setDateTo(e.target.value)}
-                />
+                <Form.Label><strong>Количество аномалий</strong></Form.Label>
+                <Form.Select
+                  value={anomaliesFilter}
+                  onChange={(e) => setAnomaliesFilter(e.target.value)}
+                >
+                  <option value="">Любое количество</option>
+                  <option value="1-5">1-5 аномалий</option>
+                  <option value="6-10">6-10 аномалий</option>
+                  <option value="10+">Более 10 аномалий</option>
+                </Form.Select>
               </Form.Group>
             </Col>
           </Row>
@@ -104,7 +109,7 @@ const TreePage: React.FC = () => {
         </div>
       )}
 
-      <Table striped bordered hover responsive>
+      <Table striped bordered hover responsive className="bg-dark">
         <thead className="table-dark">
           <tr>
             <th>ID</th>
@@ -125,13 +130,13 @@ const TreePage: React.FC = () => {
           ) : (
             filteredTrees.map((tree) => (
               <tr key={tree.id}>
-                <td>#{tree.id}</td>
+                <td><strong>#{tree.id}</strong></td>
                 <td>
                   <Badge bg={getStatusVariant(tree.status || '')}>
                     {tree.status || 'черновик'}
                   </Badge>
                 </td>
-                <td>{tree.amount_of_anomalies}</td>
+                <td>{tree.amount_of_anomalies || 0}</td>
                 <td>
                   {tree.final_year || '-'}
                 </td>
@@ -140,8 +145,7 @@ const TreePage: React.FC = () => {
                 </td>
                 <td>
                   <Button
-                    as={Link}
-                    to={`/trees/${tree.id}`}
+                    onClick={() => navigate(`/trees/${tree.id}`)}
                     variant="outline-primary"
                     size="sm"
                   >
