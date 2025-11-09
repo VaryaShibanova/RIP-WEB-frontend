@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { Container } from 'react-bootstrap';
 import type { AnomalyShortResponse } from '../types';
-import { apiService } from '../services/api';
+import { api } from '../api';
 import AnomalyCard from '../components/AnomalyCard';
 import Breadcrumbs from '../components/Breadcrumbs';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { useNavigate } from 'react-router-dom';
 import { useSearch } from '../hooks/useSearch';
 import { useCart } from '../hooks/useCart';
+import { useAuth } from '../hooks/useAuth';
 import searchIcon from '/images/mock/search-icon.png';
-import userIcon from '/images/mock/user-icon.jpg';
 
 const AnomaliesPage: React.FC = () => {
   const [anomalies, setAnomalies] = useState<AnomalyShortResponse[]>([]);
@@ -22,12 +22,14 @@ const AnomaliesPage: React.FC = () => {
   } = useSearch();
   
   const { syncCartWithApi } = useCart();
+  const { isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Автоматически применяем сохраненный поиск и синхронизируем корзину
     loadAnomaliesWithCurrentSearch();
-    syncCartWithApi();
+    if (isAuthenticated) {
+      syncCartWithApi();
+    }
   }, []);
 
   const loadAnomaliesWithCurrentSearch = async () => {
@@ -41,8 +43,8 @@ const AnomaliesPage: React.FC = () => {
   const loadAnomalies = async (searchName?: string, searchYear?: string) => {
     try {
       setLoading(true);
-      const response = await apiService.getAnomalies(searchName, searchYear);
-      setAnomalies(response.anomalies);
+      const response = await api.api.anomaliesList({ name: searchName, year: searchYear });
+      setAnomalies(response.data.anomalies || []);
     } catch (error) {
       console.error('Error loading anomalies:', error);
     } finally {
@@ -89,7 +91,6 @@ const AnomaliesPage: React.FC = () => {
 
       <h1 className="page-title">аномальные паттерны в дендрошкале</h1>
 
-      {/* Поиск и фильтры */}
       <div className="search-section">
         <div className="search-container">
           <div className="search-box">
@@ -105,21 +106,9 @@ const AnomaliesPage: React.FC = () => {
               <img src={searchIcon} alt="Поиск" />
             </button>
           </div>
-
-          {/* Корзина всегда справа от поиска */}
-          <div className="tree-icon-container">
-            <div className="tree-icon disabled" title="Корзина временно недоступна">
-              <img 
-                src={userIcon} 
-                alt="Заявка" 
-                className="grayscale"
-              />
-            </div>
-          </div>
         </div>
       </div>
 
-      {/* Сетка карточек */}
       <div className="anomalies-grid">
         {anomalies.map(anomaly => (
           <AnomalyCard 

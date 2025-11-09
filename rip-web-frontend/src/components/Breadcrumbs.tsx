@@ -12,12 +12,10 @@ const Breadcrumbs: React.FC<BreadcrumbsProps> = ({ items }) => {
     <Breadcrumb>
       {items.map((item, index) => (
         index === items.length - 1 ? (
-          // Последняя крошка - не кликабельная
           <Breadcrumb.Item key={index} active>
             {item.label}
           </Breadcrumb.Item>
         ) : (
-          // Остальные крошки - кликабельные
           <LinkContainer key={index} to={item.path || '/'}>
             <Breadcrumb.Item>
               {item.label}

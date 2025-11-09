@@ -1,5 +1,5 @@
-import { useCallback } from 'react'
-import { useAppDispatch, useAppSelector } from './redux'
+import { useCallback } from 'react';
+import { useAppDispatch, useAppSelector } from './redux';
 import { 
   setSearchTerm, 
   setSearchYear, 
@@ -7,37 +7,37 @@ import {
   clearFilters, 
   addRecentSearch,
   clearSearch
-} from '../slices/searchSlice'
+} from '../slices/searchSlice';
 
 export const useSearch = () => {
-  const dispatch = useAppDispatch()
-  const search = useAppSelector(state => state.search)
+  const dispatch = useAppDispatch();
+  const search = useAppSelector(state => state.search);
 
   const updateSearchTerm = useCallback((term: string) => {
-    dispatch(setSearchTerm(term))
-  }, [dispatch])
+    dispatch(setSearchTerm(term));
+  }, [dispatch]);
 
   const updateSearchYear = useCallback((year: string) => {
-    dispatch(setSearchYear(year))
-  }, [dispatch])
+    dispatch(setSearchYear(year));
+  }, [dispatch]);
 
   const updateFilters = useCallback((filters: any) => {
-    dispatch(setFilters(filters))
-  }, [dispatch])
+    dispatch(setFilters(filters));
+  }, [dispatch]);
 
   const resetFilters = useCallback(() => {
-    dispatch(clearFilters())
-  }, [dispatch])
+    dispatch(clearFilters());
+  }, [dispatch]);
 
   const saveSearchToHistory = useCallback((query: string) => {
     if (query.trim()) {
-      dispatch(addRecentSearch(query.trim()))
+      dispatch(addRecentSearch(query.trim()));
     }
-  }, [dispatch])
+  }, [dispatch]);
 
   const resetSearch = useCallback(() => {
-    dispatch(clearSearch())
-  }, [dispatch])
+    dispatch(clearSearch());
+  }, [dispatch]);
 
   return {
     searchTerm: search.searchTerm,
@@ -50,5 +50,5 @@ export const useSearch = () => {
     resetFilters,
     saveSearchToHistory,
     resetSearch
-  }
-}
+  };
+};

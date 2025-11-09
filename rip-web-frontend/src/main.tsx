@@ -1,4 +1,3 @@
-// main.tsx
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
@@ -10,12 +9,10 @@ import './index.css'
 
 import { registerSW } from 'virtual:pwa-register'
 
-// Автоматическая очистка кэша при разработке
 if (import.meta.env.DEV) {
   localStorage.removeItem('debug');
   sessionStorage.clear();
   
-  // Очистка service worker кэша
   if ('caches' in window) {
     caches.keys().then(names => {
       names.forEach(name => {
@@ -27,7 +24,6 @@ if (import.meta.env.DEV) {
 
 const updateSW = registerSW({
   onNeedRefresh() {
-    // Автоматическое обновление когда доступно
     updateSW();
   },
   onOfflineReady() {

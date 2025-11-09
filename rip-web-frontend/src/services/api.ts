@@ -1,5 +1,4 @@
-// services/api.ts
-import type { 
+/*import type { 
   Anomaly, 
   AnomaliesListResponse, 
   AnomalyDetailResponse,  
@@ -103,6 +102,87 @@ class ApiService {
   private getMockAnomaly(id: number): AnomalyDetailResponse {
     return mockAnomalies.find(a => a.id === id) || mockAnomalies[0];
   }
+
+    // НОВЫЕ МЕТОДЫ ДЛЯ АВТОРИЗАЦИИ
+  async login(credentials: { login: string; password: string }) {
+    return this.fetchWithFallback('/users/login', {
+      message: "Успешная аутентификация",
+      token: "mock-jwt-token",
+      user: {
+        id: 1,
+        login: credentials.login,
+        is_moderator: false
+      }
+    }, 500);
+  }
+
+  async register(userData: { login: string; password: string }) {
+    return this.fetchWithFallback('/users/register', {
+      id: 2,
+      login: userData.login,
+      is_moderator: false
+    }, 500);
+  }
+
+  async logout() {
+    return this.fetchWithFallback('/users/logout', {
+      message: "Успешный выход из системы"
+    }, 500);
+  }
+
+  async getCurrentUser() {
+    return this.fetchWithFallback('/users/me', {
+      id: 1,
+      login: "research_user",
+      is_moderator: false
+    }, 500);
+  }
+
+  // НОВЫЕ МЕТОДЫ ДЛЯ ЗАЯВОК
+  async getUserRequests() {
+    return this.fetchWithFallback('/trees', {
+      trees: [
+        {
+          id: 1,
+          creator: "research_user",
+          amount_of_anomalies: 3,
+          final_year: 2023,
+          status: "черновик"
+        }
+      ]
+    }, 500);
+  }
+
+  async getTreeDetail(treeId: number) {
+    return this.fetchWithFallback(`/trees/${treeId}`, {
+      tree: {
+        id: treeId,
+        description: "Исследование аномалий роста",
+        total_rings: 100,
+        final_year: 2023,
+        status: "черновик",
+        creator_id: 1
+      },
+      treeItems: [
+        {
+          anomaly_id: 1,
+          anomaly_name: "Извержение вулкана Уайнапутина",
+          anomaly_image: "/RIP-WEB-frontend/images/mock/main-page.png",
+          anomalous_rings: "45,67,89",
+          calculated_year: 2023
+        }
+      ]
+    }, 500);
+  }
+
+  async addToTree(anomalyId: number) {
+    return this.fetchWithFallback('/trees/current/items', {
+      message: "Аномалия добавлена в заявку",
+      tree_id: 1
+    }, 500);
+  }
+
 }
 
 export const apiService = new ApiService();
+*/

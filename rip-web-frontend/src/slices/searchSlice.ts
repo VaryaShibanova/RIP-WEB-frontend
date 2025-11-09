@@ -1,16 +1,5 @@
 import { createSlice } from '@reduxjs/toolkit'
-import type { PayloadAction } from '@reduxjs/toolkit'
-
-interface SearchState {
-  searchTerm: string
-  searchYear: string
-  filters: {
-    yearFrom?: string
-    yearTo?: string
-    type?: string
-  }
-  recentSearches: string[]
-}
+import type { SearchState } from '../types'
 
 const initialState: SearchState = {
   searchTerm: '',
@@ -23,13 +12,13 @@ const searchSlice = createSlice({
   name: 'search',
   initialState,
   reducers: {
-    setSearchTerm: (state, action: PayloadAction<string>) => {
+    setSearchTerm: (state, action) => {
       state.searchTerm = action.payload
     },
-    setSearchYear: (state, action: PayloadAction<string>) => {
+    setSearchYear: (state, action) => {
       state.searchYear = action.payload
     },
-    setFilters: (state, action: PayloadAction<SearchState['filters']>) => {
+    setFilters: (state, action) => {
       state.filters = { ...state.filters, ...action.payload }
     },
     clearFilters: (state) => {
@@ -37,7 +26,7 @@ const searchSlice = createSlice({
       state.searchTerm = ''
       state.searchYear = ''
     },
-    addRecentSearch: (state, action: PayloadAction<string>) => {
+    addRecentSearch: (state, action) => {
       state.recentSearches = [
         action.payload,
         ...state.recentSearches.filter(search => search !== action.payload)
@@ -58,5 +47,4 @@ export const {
   addRecentSearch,
   clearSearch
 } = searchSlice.actions
-
 export default searchSlice.reducer

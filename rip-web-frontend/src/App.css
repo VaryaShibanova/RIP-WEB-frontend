@@ -1515,3 +1515,79 @@ body {
     white-space: nowrap !important;
     border: 0 !important;
 }
+
+/* Стили для форм и кнопок */
+.form-control:focus {
+  border-color: #4ECDC4;
+  box-shadow: 0 0 0 0.2rem rgba(78, 205, 196, 0.25);
+}
+
+.btn-primary {
+  background-color: #4ECDC4;
+  border-color: #4ECDC4;
+}
+
+.btn-primary:hover {
+  background-color: #3db8af;
+  border-color: #3db8af;
+}
+
+/* Стили для таблиц */
+.table {
+  color: white;
+}
+
+.table-dark {
+  background-color: #1a1a2e;
+}
+
+/* Стили для карточек */
+.card {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+}
+
+.card-header {
+  background: rgba(255, 255, 255, 0.1);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Стили для модальных окон */
+.modal-content {
+  background: #1a1a2e;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.modal-header {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.modal-footer {
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Стили для баджей */
+.badge {
+  font-size: 0.75em;
+}
+
+/* Стили для спиннера загрузки */
+.d-flex.flex-column.align-items-center.justify-content-center.p-4 {
+  min-height: 200px;
+}
+
+/* Улучшения для адаптивности */
+@media (max-width: 768px) {
+  .table-responsive {
+    font-size: 0.875rem;
+  }
+  
+  .btn-group-vertical {
+    width: 100%;
+  }
+  
+  .btn-group-vertical .btn {
+    margin-bottom: 5px;
+  }
+}

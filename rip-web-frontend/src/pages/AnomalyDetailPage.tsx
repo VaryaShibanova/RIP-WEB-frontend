@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Container, Button } from 'react-bootstrap';
 import { useParams, useNavigate } from 'react-router-dom';
 import type { AnomalyDetailResponse } from '../types';
-import { apiService } from '../services/api';
+import { api } from '../api';
 import Breadcrumbs from '../components/Breadcrumbs';
 import LoadingSpinner from '../components/LoadingSpinner';
 import defaultImage from '/images/mock/main-page.png';
@@ -25,8 +25,8 @@ const AnomalyDetailPage: React.FC = () => {
     try {
       setLoading(true);
       setError('');
-      const data = await apiService.getAnomaly(anomalyId);
-      setAnomaly(data);
+      const data = await api.api.anomaliesDetail(anomalyId);
+      setAnomaly(data.data);
     } catch (error) {
       console.error('Error loading anomaly details:', error);
       setError('Не удалось загрузить данные аномалии');
@@ -71,7 +71,7 @@ const AnomalyDetailPage: React.FC = () => {
           <Breadcrumbs items={[
             { label: 'Главная', path: '/' },
             { label: 'Аномальные паттерны', path: '/anomalies' },
-            { label: anomaly.name }
+            { label: anomaly.name || 'Аномалия' }
           ]} />
         </div>
 

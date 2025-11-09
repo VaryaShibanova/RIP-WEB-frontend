@@ -2,7 +2,7 @@ import React from 'react';
 import { Spinner } from 'react-bootstrap';
 
 interface LoadingSpinnerProps {
-  size?: string; // Изменяем тип
+  size?: string;
   text?: string;
 }
 
@@ -10,7 +10,6 @@ const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
   size = 'lg', 
   text = 'Загрузка...' 
 }) => {
-  // Кастомные стили для разных размеров
   const getSpinnerStyle = () => {
     switch (size) {
       case 'sm': return { width: '1.5rem', height: '1.5rem' };

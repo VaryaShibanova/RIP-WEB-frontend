@@ -1,59 +1,37 @@
-export interface Anomaly {
-  id: number;
-  name: string;
-  description: string;
-  image_url: string;
-  year: number;
-}
+// Re-export types from generated API
+export type {
+  HandlerAnomalyShortResponse as AnomalyShortResponse,
+  HandlerAnomalyDetailResponse as AnomalyDetailResponse,
+  HandlerAnomaliesListResponse as AnomaliesListResponse,
+  HandlerTreeShortResponse as TreeShortResponse,
+  HandlerTreeDetailResponse as TreeDetailResponse,
+  HandlerTreeResponse as TreeResponse,
+  HandlerTreeItemResponse as TreeItemResponse,
+  HandlerTreesListResponse as TreesListResponse,
+  HandlerTreeCartResponse as TreeCartResponse,
+  HandlerUserResponse as UserResponse,
+  HandlerLoginRequest as LoginRequest,
+  HandlerRegisterRequest as RegisterRequest,
+  HandlerLoginResponse as LoginResponse,
+  HandlerAddToTreeRequest as AddToTreeRequest,
+  HandlerUpdateTreeItemRequest as UpdateTreeItemRequest,
+  HandlerUpdateTreeRequest as UpdateTreeRequest,
+  HandlerCompleteTreeRequest as CompleteTreeRequest,
+} from '../api/Api';
 
-export interface AnomaliesListResponse {
-  anomalies: AnomalyShortResponse[];
-}
-
-export interface AnomalyShortResponse {
-  id: number;
-  name: string;
-  image_url: string;
-  year: number;
-}
-
-export interface AnomalyDetailResponse {
-  id: number;
-  name: string;
-  description: string;
-  image_url: string;
-  year: number;
-}
-
+// Additional types for Redux state
 export interface BreadcrumbItem {
   label: string;
   path?: string;
 }
 
-export interface TreeItem {
-  anomaly_id: number;
-  anomaly_name: string;
-  anomaly_image: string;
-  anomalous_rings: string;
-  calculated_year: number;
-}
-
-export interface TreeDetailResponse {
-  tree: {
-    id: number;
-    description: string;
-    total_rings: number;
-    final_year: number;
-    status: string;
-    creator_id: number;
+export interface SearchState {
+  searchTerm: string;
+  searchYear: string;
+  filters: {
+    yearFrom?: string;
+    yearTo?: string;
+    type?: string;
   };
-  treeItems: TreeItem[];
+  recentSearches: string[];
 }
-
-export interface AnomalyShortResponse {
-  id: number;
-  name: string;
-  image_url: string;
-  year: number;
-}
-

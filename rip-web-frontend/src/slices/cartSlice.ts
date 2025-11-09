@@ -1,17 +1,31 @@
-import { createSlice } from '@reduxjs/toolkit'
-import type { PayloadAction } from '@reduxjs/toolkit'
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
+import { api } from '../api'
 
 interface CartState {
   itemCount: number
   userId: number
+  treeId: number
   isLoading: boolean
 }
 
 const initialState: CartState = {
   itemCount: 0,
   userId: -1,
+  treeId: 0,
   isLoading: false,
 }
+
+export const syncCartWithApi = createAsyncThunk(
+  'cart/syncCartWithApi',
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await api.api.treesCartList()
+      return response.data
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.error || 'Ошибка синхронизации корзины')
+    }
+  }
+)
 
 const cartSlice = createSlice({
   name: 'cart',
@@ -23,21 +37,22 @@ const cartSlice = createSlice({
     decrementCart: (state) => {
       state.itemCount = Math.max(0, state.itemCount - 1)
     },
-    setCartCount: (state, action: PayloadAction<number>) => {
+    setCartCount: (state, action: { payload: number }) => {
       state.itemCount = action.payload
     },
     clearCart: (state) => {
       state.itemCount = 0
       state.userId = -1
+      state.treeId = 0
     },
-    setCartLoading: (state, action: PayloadAction<boolean>) => {
-      state.isLoading = action.payload
-    },
-    // Обновляем из API (сохраняем и item_count и user_id)
-    updateCartFromApi: (state, action: PayloadAction<{user_id: number, item_count: number}>) => {
-      state.itemCount = action.payload.item_count
-      state.userId = action.payload.user_id
-    }
+  },
+  extraReducers: (builder) => {
+    builder
+      .addCase(syncCartWithApi.fulfilled, (state, action) => {
+        state.itemCount = action.payload.item_count || 0
+        state.userId = action.payload.user_id || -1
+        state.treeId = action.payload.tree_id || 0
+      })
   },
 })
 
@@ -45,9 +60,6 @@ export const {
   incrementCart, 
   decrementCart, 
   setCartCount, 
-  clearCart, 
-  setCartLoading,
-  updateCartFromApi 
+  clearCart 
 } = cartSlice.actions
-
 export default cartSlice.reducer
