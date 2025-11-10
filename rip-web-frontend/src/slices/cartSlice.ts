@@ -1,3 +1,4 @@
+// cartSlice.ts
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import { api } from '../api'
 
@@ -20,8 +21,26 @@ export const syncCartWithApi = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const response = await api.api.treesCartList()
-      return response.data
+      // Проверяем, что данные пришли и они корректны
+      if (response.data && typeof response.data.item_count === 'number') {
+        return response.data
+      } else {
+        // Если данные некорректны, возвращаем значения по умолчанию
+        return {
+          item_count: 0,
+          user_id: -1,
+          tree_id: 0
+        }
+      }
     } catch (error: any) {
+      // Если ошибка (например, 401 для неавторизованных), возвращаем значения по умолчанию
+      if (error.response?.status === 401) {
+        return {
+          item_count: 0,
+          user_id: -1,
+          tree_id: 0
+        }
+      }
       return rejectWithValue(error.response?.data?.error || 'Ошибка синхронизации корзины')
     }
   }
@@ -48,10 +67,21 @@ const cartSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+      .addCase(syncCartWithApi.pending, (state) => {
+        state.isLoading = true
+      })
       .addCase(syncCartWithApi.fulfilled, (state, action) => {
+        state.isLoading = false
         state.itemCount = action.payload.item_count || 0
         state.userId = action.payload.user_id || -1
         state.treeId = action.payload.tree_id || 0
+      })
+      .addCase(syncCartWithApi.rejected, (state) => {
+        state.isLoading = false
+        // При ошибке тоже устанавливаем значения по умолчанию
+        state.itemCount = 0
+        state.userId = -1
+        state.treeId = 0
       })
   },
 })

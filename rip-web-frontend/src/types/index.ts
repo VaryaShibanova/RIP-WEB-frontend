@@ -35,3 +35,4 @@ export interface SearchState {
   };
   recentSearches: string[];
 }
+

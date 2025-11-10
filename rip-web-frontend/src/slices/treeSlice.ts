@@ -1,3 +1,4 @@
+// treeSlice.ts
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import { api } from '../api'
 import type { 
@@ -20,8 +21,22 @@ const initialState: TreeState = {
   error: null,
 }
 
+// Для пользователя - загружаем все его заявки без фильтров
 export const fetchUserTrees = createAsyncThunk(
   'trees/fetchUserTrees',
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await api.api.treesList()
+      return response.data.trees || []
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.error || 'Ошибка загрузки заявок')
+    }
+  }
+)
+
+// Для модератора - загружаем с фильтрами
+export const fetchModeratorTrees = createAsyncThunk(
+  'trees/fetchModeratorTrees',
   async (filters: { status?: string; date_from?: string; date_to?: string } | undefined, { rejectWithValue }) => {
     try {
       const response = await api.api.treesList(filters)
@@ -123,6 +138,20 @@ export const deleteTree = createAsyncThunk(
   }
 )
 
+// Действия для модератора
+export const completeTree = createAsyncThunk(
+  'trees/completeTree',
+  async (params: { treeId: number; action: string }, { rejectWithValue }) => {
+    try {
+      const { treeId, action } = params;
+      const response = await api.api.treesCompleteUpdate(treeId, { action })
+      return response.data
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.error || 'Ошибка завершения заявки')
+    }
+  }
+)
+
 const treeSlice = createSlice({
   name: 'trees',
   initialState,
@@ -136,6 +165,7 @@ const treeSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+      // Загрузка заявок пользователя
       .addCase(fetchUserTrees.pending, (state) => {
         state.isLoading = true
       })
@@ -145,6 +175,19 @@ const treeSlice = createSlice({
         state.error = null
       })
       .addCase(fetchUserTrees.rejected, (state, action) => {
+        state.isLoading = false
+        state.error = action.payload as string
+      })
+      // Загрузка заявок модератора
+      .addCase(fetchModeratorTrees.pending, (state) => {
+        state.isLoading = true
+      })
+      .addCase(fetchModeratorTrees.fulfilled, (state, action) => {
+        state.isLoading = false
+        state.trees = action.payload
+        state.error = null
+      })
+      .addCase(fetchModeratorTrees.rejected, (state, action) => {
         state.isLoading = false
         state.error = action.payload as string
       })
@@ -174,8 +217,14 @@ const treeSlice = createSlice({
         state.error = null
       })
       .addCase(submitTree.fulfilled, (state, action) => {
+        // Обновляем статус в текущей заявке
         if (state.currentTree && state.currentTree.tree) {
           state.currentTree.tree = action.payload
+        }
+        // Обновляем статус в списке заявок
+        const updatedTree = state.trees.find(tree => tree.id === action.payload.id)
+        if (updatedTree) {
+          updatedTree.status = action.payload.status
         }
         state.error = null
       })
@@ -188,6 +237,14 @@ const treeSlice = createSlice({
       .addCase(deleteTree.fulfilled, (state, action) => {
         state.trees = state.trees.filter(tree => tree.id !== action.payload)
         state.currentTree = null
+        state.error = null
+      })
+      .addCase(completeTree.fulfilled, (state, action) => {
+        // Обновляем статус в списке заявок после действий модератора
+        const updatedTree = state.trees.find(tree => tree.id === action.payload.id)
+        if (updatedTree) {
+          updatedTree.status = action.payload.status
+        }
         state.error = null
       })
   },

@@ -1,4 +1,4 @@
-// TreePage.tsx
+// TreePage.tsx - с улучшенной отладкой
 import React, { useState, useEffect } from 'react';
 import { Container, Table, Button, Form, Row, Col, Card } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
@@ -14,8 +14,10 @@ const TreePage: React.FC = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const { trees, isLoading, error } = useAppSelector((state) => state.trees);
+  const { user } = useAppSelector((state) => state.auth);
 
   useEffect(() => {
+    console.log('🔄 Загружаем заявки пользователя...');
     dispatch(fetchUserTrees());
   }, [dispatch]);
 
@@ -23,12 +25,11 @@ const TreePage: React.FC = () => {
     navigate('/anomalies');
   };
 
-  // Простая фильтрация с отладкой
+  // Фильтрация для обычного пользователя
   const filteredTrees = trees.filter(tree => {
     // Фильтр по статусу
     if (statusFilter) {
-      // Приводим оба значения к нижнему регистру для сравнения
-      const treeStatus = (tree.status || '').toLowerCase().trim();
+      const treeStatus = (tree.status || 'черновик').toLowerCase().trim();
       const filterStatus = statusFilter.toLowerCase().trim();
       
       if (treeStatus !== filterStatus) {
@@ -54,13 +55,16 @@ const TreePage: React.FC = () => {
     return true;
   });
 
-  // Для отладки - выводим в консоль
+  // Детальная отладка
   useEffect(() => {
-    console.log('Все заявки:', trees);
-    console.log('Статусы:', trees.map(t => t.status));
-    console.log('Фильтр статуса:', statusFilter);
-    console.log('Отфильтровано:', filteredTrees.length);
-  }, [trees, statusFilter, filteredTrees]);
+    console.log('🔍 TreePage ОТЛАДКА:', {
+      user: user,
+      всеЗаявкиИзAPI: trees,
+      отфильтрованныеЗаявки: filteredTrees,
+      фильтрСтатуса: statusFilter,
+      заявкиСРазнымиСтатусами: Array.from(new Set(trees.map(t => t.status || 'черновик')))
+    });
+  }, [trees, filteredTrees, statusFilter, user]);
 
   if (isLoading) {
     return <LoadingSpinner text="Загрузка заявок..." />;
@@ -100,7 +104,6 @@ const TreePage: React.FC = () => {
                     <option value="сформирован">Сформирован</option>
                     <option value="завершён">Завершён</option>
                     <option value="отклонён">Отклонён</option>
-                    <option value="удалён">Удалён</option>
                   </Form.Select>
                   <Form.Text className="text-muted">
                     Найдено заявок: {filteredTrees.length} из {trees.length}
@@ -137,21 +140,20 @@ const TreePage: React.FC = () => {
               <th>Статус</th>
               <th>Количество аномалий</th>
               <th>Финальный год</th>
-              <th>Модератор</th>
               <th>Действия</th>
             </tr>
           </thead>
           <tbody>
             {filteredTrees.length === 0 ? (
               <tr>
-                <td colSpan={5} className="text-center py-4">
+                <td colSpan={4} className="text-center py-4">
                   {trees.length === 0 ? 'У вас пока нет заявок' : 'Заявки не найдены по выбранным фильтрам'}
-                  {statusFilter && (
+                  {statusFilter && trees.length > 0 && (
                     <div className="mt-2">
                       <small className="text-muted">
                         Текущий фильтр: "{statusFilter}"
                         <br />
-                        Доступные статусы: {Array.from(new Set(trees.map(t => t.status || 'черновик'))).join(', ')}
+                        Доступные статусы в API: {Array.from(new Set(trees.map(t => t.status || 'черновик'))).join(', ')}
                       </small>
                     </div>
                   )}
@@ -161,7 +163,16 @@ const TreePage: React.FC = () => {
               filteredTrees.map((tree) => (
                 <tr key={tree.id}>
                   <td>
-                    <span className="status-text">
+                    <span 
+                      className={`status-badge status-${tree.status || 'черновик'}`}
+                      style={{
+                        padding: '4px 8px',
+                        borderRadius: '4px',
+                        fontSize: '0.875rem',
+                        fontWeight: '500',
+                        textTransform: 'lowercase'
+                      }}
+                    >
                       {tree.status || 'черновик'}
                     </span>
                   </td>
@@ -173,11 +184,6 @@ const TreePage: React.FC = () => {
                   <td>
                     <span className="final-year">
                       {tree.final_year ? `${tree.final_year} г.` : 'Не рассчитан'}
-                    </span>
-                  </td>
-                  <td>
-                    <span className="moderator">
-                      {tree.moderator || 'Не назначен'}
                     </span>
                   </td>
                   <td>

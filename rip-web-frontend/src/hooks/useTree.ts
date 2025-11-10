@@ -1,7 +1,9 @@
+// useTree.ts
 import { useCallback } from 'react';
 import { useAppDispatch, useAppSelector } from './redux';
 import {
   fetchUserTrees,
+  fetchModeratorTrees,
   fetchTreeById,
   addToTree,
   updateTreeItem,
@@ -9,6 +11,7 @@ import {
   submitTree,
   updateTree,
   deleteTree,
+  completeTree,
   clearError,
   clearCurrentTree
 } from '../slices/treeSlice';
@@ -16,10 +19,26 @@ import {
 export const useTrees = () => {
   const dispatch = useAppDispatch();
   const trees = useAppSelector(state => state.trees);
+  const { user } = useAppSelector(state => state.auth);
+
+  const isModerator = user?.is_moderator;
 
   const loadUserTrees = useCallback(async () => {
     try {
-      await dispatch(fetchUserTrees()).unwrap();
+      if (isModerator) {
+        await dispatch(fetchModeratorTrees()).unwrap();
+      } else {
+        await dispatch(fetchUserTrees()).unwrap();
+      }
+      return { success: true };
+    } catch (error: any) {
+      return { success: false, error: error as string };
+    }
+  }, [dispatch, isModerator]);
+
+  const loadModeratorTrees = useCallback(async (filters?: { status?: string; date_from?: string; date_to?: string }) => {
+    try {
+      await dispatch(fetchModeratorTrees(filters)).unwrap();
       return { success: true };
     } catch (error: any) {
       return { success: false, error: error as string };
@@ -89,6 +108,15 @@ export const useTrees = () => {
     }
   }, [dispatch]);
 
+  const completeTreeAction = useCallback(async (treeId: number, action: string) => {
+    try {
+      await dispatch(completeTree({ treeId, action })).unwrap();
+      return { success: true };
+    } catch (error: any) {
+      return { success: false, error: error as string };
+    }
+  }, [dispatch]);
+
   const resetError = useCallback(() => {
     dispatch(clearError());
   }, [dispatch]);
@@ -103,9 +131,11 @@ export const useTrees = () => {
     currentTree: trees.currentTree,
     isLoading: trees.isLoading,
     error: trees.error,
+    isModerator,
     
     // Actions
     loadUserTrees,
+    loadModeratorTrees,
     loadTree,
     addToTree: addToTreeItem,
     updateItem,
@@ -113,6 +143,7 @@ export const useTrees = () => {
     submit,
     update,
     remove,
+    completeTree: completeTreeAction,
     resetError,
     resetCurrentTree,
   };
