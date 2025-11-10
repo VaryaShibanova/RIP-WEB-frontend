@@ -1,6 +1,6 @@
 // TreeDetailPage.tsx - исправленная версия с расчетом годов
 import React, { useState, useEffect } from 'react';
-import { Container, Button, Alert, Modal, Form, Row, Col } from 'react-bootstrap';
+import { Container, Button, Alert, Modal, Form } from 'react-bootstrap';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../hooks/redux';
 import { 
