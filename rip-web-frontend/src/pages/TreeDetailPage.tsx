@@ -1,6 +1,6 @@
-// TreeDetailPage.tsx - исправленная версия с расчетом годов
+// TreeDetailPage.tsx - исправленная версия
 import React, { useState, useEffect } from 'react';
-import { Container, Button, Alert, Modal, Form } from 'react-bootstrap';
+import { Container, Alert } from 'react-bootstrap';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../hooks/redux';
 import { 
@@ -9,7 +9,9 @@ import {
   removeFromTree, 
   submitTree,
   updateTreeItem,
-  completeTree
+  completeTree,
+  setTreeLocalData,
+  clearTreeLocalData
 } from '../slices/treeSlice';
 import Breadcrumbs from '../components/Breadcrumbs';
 import LoadingSpinner from '../components/LoadingSpinner';
@@ -17,7 +19,6 @@ import type { TreeDetailResponse, TreeItemResponse } from '../types';
 import defaultImage from '/images/mock/main-page.png';
 import confirmIcon from '/images/mock/confirm-icon.png';
 import deleteIcon from '/images/mock/delete-icon.png';
-import saveIcon from '/images/mock/save-icon.png';
 import addIcon from '/images/mock/add-b.png';
 
 const TreeDetailPage: React.FC = () => {
@@ -25,47 +26,19 @@ const TreeDetailPage: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   
-  const { currentTree, isLoading, error } = useAppSelector((state) => state.trees);
+  const { currentTree, isLoading, error, localTreeData } = useAppSelector((state) => state.trees);
   const { user } = useAppSelector((state) => state.auth);
   
-  const [showSubmitModal, setShowSubmitModal] = useState(false);
-  const [showClearModal, setShowClearModal] = useState(false);
-  const [showCompleteModal, setShowCompleteModal] = useState(false);
   const [editingItem, setEditingItem] = useState<number | null>(null);
-  
-  const [treeData, setTreeData] = useState({
-    description: '',
-    total_rings: ''
-  });
-
   const [anomalousRings, setAnomalousRings] = useState('');
 
-  // Сохраняем данные в localStorage при изменении
-  useEffect(() => {
-    if (id && treeData.description) {
-      localStorage.setItem(`tree_${id}_description`, treeData.description);
-    }
-    if (id && treeData.total_rings) {
-      localStorage.setItem(`tree_${id}_total_rings`, treeData.total_rings);
-    }
-  }, [treeData, id]);
-
-  useEffect(() => {
-    if (id) {
-      dispatch(fetchTreeById(parseInt(id))).then((result: any) => {
-        // После загрузки данных из API, восстанавливаем из localStorage если есть
-        if (result.payload?.tree) {
-          const savedDescription = localStorage.getItem(`tree_${id}_description`);
-          const savedTotalRings = localStorage.getItem(`tree_${id}_total_rings`);
-          
-          setTreeData({
-            description: savedDescription || result.payload.tree.description || '',
-            total_rings: savedTotalRings || result.payload.tree.total_rings?.toString() || ''
-          });
-        }
-      });
-    }
-  }, [dispatch, id]);
+  // Получаем локальные данные из Redux store
+  const treeId = id ? parseInt(id) : 0;
+  const localData = localTreeData?.[treeId] || {
+    description: '',
+    totalRings: '',
+    anomalousRings: {}
+  };
 
   // Приводим типы для безопасного использования
   const treeDetail = currentTree as TreeDetailResponse | null;
@@ -78,105 +51,76 @@ const TreeDetailPage: React.FC = () => {
   const isOwner = tree?.creator_id === user?.id;
   const canEdit = isDraft && isOwner;
   const isModerator = user?.is_moderator;
-  const canModerate = isModerator && (treeStatus === 'сформирован' || treeStatus === 'черновик');
+  const canModerate = isModerator && treeStatus === 'сформирован';
 
-  // Функция для расчета года аномалии
-  const calculateAnomalyYear = (item: TreeItemResponse, totalRings: number): number | null => {
-    if (!item.anomalous_rings || !totalRings) return null;
-    
-    try {
-      // Парсим номера аномальных колец
-      const rings = item.anomalous_rings.split(',').map(r => parseInt(r.trim())).filter(r => !isNaN(r));
-      if (rings.length === 0) return null;
-      
-      // Берем первое аномальное кольцо для расчета
-      const firstAnomalousRing = Math.min(...rings);
-      
-      // Расчет: общее количество колец - номер аномального кольца + 1
-      // Это дает год, когда произошла аномалия
-      const calculatedYear = totalRings - firstAnomalousRing + 1;
-      
-      return calculatedYear > 0 ? calculatedYear : null;
-    } catch (error) {
-      console.error('Error calculating anomaly year:', error);
-      return null;
+  // Загружаем данные заявки при монтировании
+  useEffect(() => {
+    if (id) {
+      dispatch(fetchTreeById(parseInt(id)));
     }
-  };
+  }, [dispatch, id]);
 
-  // Функция для расчета финального года заявки
-  const calculateFinalYear = (): number | null => {
-    if (!treeItems.length || !treeData.total_rings) return null;
-    
-    try {
-      const totalRings = parseInt(treeData.total_rings);
-      if (isNaN(totalRings)) return null;
-      
-      // Находим самую раннюю аномалию (самый старый год)
-      const years = treeItems.map(item => calculateAnomalyYear(item, totalRings)).filter(y => y !== null) as number[];
-      if (years.length === 0) return null;
-      
-      return Math.min(...years);
-    } catch (error) {
-      console.error('Error calculating final year:', error);
-      return null;
-    }
-  };
+  // ОТЛАДКА: проверяем что происходит с данными
+  useEffect(() => {
+    console.log('🔍 TreeDetailPage ОТЛАДКА:', {
+      treeId,
+      localTreeData,
+      localData,
+      currentTree: currentTree?.tree,
+      hasLocalData: !!localTreeData?.[treeId]
+    });
+  }, [treeId, localTreeData, localData, currentTree]);
 
-  const handleUpdateTree = async () => {
+  // Обработчики изменений (сохраняем в Redux сразу)
+  const handleDescriptionChange = (value: string) => {
     if (!id) return;
-    
-    try {
-      // Автоматически рассчитываем финальный год если есть данные
-      const finalYear = calculateFinalYear();
-      
-      await dispatch(updateTree({
-        treeId: parseInt(id),
-        data: {
-          description: treeData.description,
-          total_rings: parseInt(treeData.total_rings) || 0,
-          final_year: finalYear || undefined
-        }
-      })).unwrap();
-      
-      // Сохраняем в localStorage после успешного обновления
-      localStorage.setItem(`tree_${id}_description`, treeData.description);
-      localStorage.setItem(`tree_${id}_total_rings`, treeData.total_rings);
-    } catch (error) {
-      console.error('Error updating tree:', error);
-    }
+    console.log('📝 Изменение описания:', value);
+    dispatch(setTreeLocalData({
+      treeId: parseInt(id),
+      description: value
+    }));
   };
 
+  const handleTotalRingsChange = (value: string) => {
+    if (!id) return;
+    const numericValue = value.replace(/[^0-9]/g, '');
+    console.log('🔢 Изменение количества колец:', numericValue);
+    dispatch(setTreeLocalData({
+      treeId: parseInt(id),
+      totalRings: numericValue
+    }));
+  };
+
+  // Для аномальных колец
   const handleEditItem = (item: TreeItemResponse) => {
     setEditingItem(item.anomaly_id!);
-    setAnomalousRings(item.anomalous_rings || '');
+    const ringsToEdit = localData.anomalousRings[item.anomaly_id!] || item.anomalous_rings || '';
+    setAnomalousRings(ringsToEdit);
   };
 
   const handleSaveItem = async (anomalyId: number) => {
     if (!id) return;
     
     try {
+      // Сохраняем в БД
       await dispatch(updateTreeItem({
         treeId: parseInt(id),
         anomalyId,
         anomalousRings
       })).unwrap();
+      
+      // Сохраняем в Redux
+      dispatch(setTreeLocalData({
+        treeId: parseInt(id),
+        anomalousRings: {
+          ...localData.anomalousRings,
+          [anomalyId]: anomalousRings
+        }
+      }));
+      
       setEditingItem(null);
-      
-      // После сохранения аномальных колец пересчитываем и обновляем заявку
-      const finalYear = calculateFinalYear();
-      if (finalYear) {
-        await dispatch(updateTree({
-          treeId: parseInt(id),
-          data: {
-            final_year: finalYear
-          }
-        })).unwrap();
-      }
-      
-      // Обновляем данные
-      dispatch(fetchTreeById(parseInt(id)));
     } catch (error) {
-      console.error('Error updating item:', error);
+      console.error('❌ Error updating item:', error);
     }
   };
 
@@ -193,34 +137,39 @@ const TreeDetailPage: React.FC = () => {
         treeId: parseInt(id),
         anomalyId
       })).unwrap();
+      
+      // Удаляем из Redux
+      const updatedRings = { ...localData.anomalousRings };
+      delete updatedRings[anomalyId];
+      dispatch(setTreeLocalData({
+        treeId: parseInt(id),
+        anomalousRings: updatedRings
+      }));
+      
       dispatch(fetchTreeById(parseInt(id)));
     } catch (error) {
       console.error('Error removing item:', error);
     }
   };
 
+  // Действия без модальных окон
   const handleSubmitTree = async () => {
     if (!id) return;
     
     try {
-      // Перед подтверждением рассчитываем финальный год
-      const finalYear = calculateFinalYear();
-      
+      // Сохраняем поля в БД перед подтверждением
       await dispatch(updateTree({
         treeId: parseInt(id),
         data: {
-          description: treeData.description,
-          total_rings: parseInt(treeData.total_rings) || 0,
-          final_year: finalYear || undefined
+          description: localData.description,
+          total_rings: parseInt(localData.totalRings) || 0
         }
       })).unwrap();
       
       await dispatch(submitTree(parseInt(id))).unwrap();
       
-      // Очищаем localStorage после подтверждения заявки
-      localStorage.removeItem(`tree_${id}_description`);
-      localStorage.removeItem(`tree_${id}_total_rings`);
-      setShowSubmitModal(false);
+      // Очищаем локальные данные после подтверждения
+      dispatch(clearTreeLocalData(parseInt(id)));
       navigate('/trees');
     } catch (error) {
       console.error('Error submitting tree:', error);
@@ -236,7 +185,6 @@ const TreeDetailPage: React.FC = () => {
         action
       })).unwrap();
       
-      setShowCompleteModal(false);
       // Обновляем данные после завершения
       dispatch(fetchTreeById(parseInt(id)));
     } catch (error) {
@@ -245,44 +193,64 @@ const TreeDetailPage: React.FC = () => {
   };
 
   const handleClearTree = async () => {
-    if (!id || treeItems.length === 0) return;
+    if (!id) return;
     
     try {
-      for (const item of treeItems) {
-        if (item.anomaly_id) {
-          await dispatch(removeFromTree({
-            treeId: parseInt(id),
-            anomalyId: item.anomaly_id
-          })).unwrap();
+      // Удаляем все аномалии если они есть
+      if (treeItems.length > 0) {
+        for (const item of treeItems) {
+          if (item.anomaly_id) {
+            await dispatch(removeFromTree({
+              treeId: parseInt(id),
+              anomalyId: item.anomaly_id
+            })).unwrap();
+          }
         }
       }
       
-      // Очищаем данные и localStorage
-      setTreeData({
+      // Очищаем локальные данные
+      dispatch(setTreeLocalData({
+        treeId: parseInt(id),
         description: '',
-        total_rings: ''
-      });
+        totalRings: '',
+        anomalousRings: {}
+      }));
       
+      // Очищаем в БД
       await dispatch(updateTree({
         treeId: parseInt(id),
         data: {
           description: '',
-          total_rings: 0,
-          final_year: undefined
+          total_rings: 0
         }
       })).unwrap();
       
-      localStorage.removeItem(`tree_${id}_description`);
-      localStorage.removeItem(`tree_${id}_total_rings`);
-      
-      setShowClearModal(false);
       dispatch(fetchTreeById(parseInt(id)));
     } catch (error) {
       console.error('Error clearing tree:', error);
     }
   };
 
-  // Автоматическое сохранение при потере фокуса
+  // Получаем отображаемые значения
+  const getDisplayRings = (item: TreeItemResponse): string => {
+    return localData.anomalousRings[item.anomaly_id!] || item.anomalous_rings || '';
+  };
+
+  const getDisplayYear = (item: TreeItemResponse): string => {
+    if (item.calculated_year) {
+      return `${item.calculated_year} г.`;
+    }
+    return 'Не рассчитан';
+  };
+
+  const getFinalYearDisplay = (): string => {
+    if (tree?.final_year) {
+      return `${tree.final_year} г.`;
+    }
+    return 'Не рассчитан';
+  };
+
+  // Автоматическое сохранение при потере фокуса для аномальных колец
   const handleBlur = (anomalyId: number) => {
     if (editingItem === anomalyId && anomalousRings !== '') {
       handleSaveItem(anomalyId);
@@ -291,47 +259,15 @@ const TreeDetailPage: React.FC = () => {
     }
   };
 
-  // Автоматическое сохранение при нажатии Enter
+  // Автоматическое сохранение при нажатии Enter для аномальных колец
   const handleKeyPress = (e: React.KeyboardEvent, anomalyId: number) => {
     if (e.key === 'Enter') {
+      e.preventDefault();
+      e.stopPropagation();
       handleSaveItem(anomalyId);
     } else if (e.key === 'Escape') {
       handleCancelEdit();
     }
-  };
-
-  // Получаем рассчитанный год для отображения (приоритет: API -> локальный расчет)
-  const getDisplayYear = (item: TreeItemResponse): string => {
-    // Сначала пробуем взять из API
-    if (item.calculated_year) {
-      return `${item.calculated_year} г.`;
-    }
-    
-    // Если нет в API, рассчитываем локально
-    if (treeData.total_rings && item.anomalous_rings) {
-      const calculatedYear = calculateAnomalyYear(item, parseInt(treeData.total_rings));
-      if (calculatedYear) {
-        return `${calculatedYear} г. (расчет)`;
-      }
-    }
-    
-    return 'Не рассчитан';
-  };
-
-  // Получаем финальный год для отображения
-  const getFinalYearDisplay = (): string => {
-    // Сначала пробуем взять из API
-    if (tree?.final_year) {
-      return `${tree.final_year} г.`;
-    }
-    
-    // Если нет в API, рассчитываем локально
-    const calculatedFinalYear = calculateFinalYear();
-    if (calculatedFinalYear) {
-      return `${calculatedFinalYear} г. (расчет)`;
-    }
-    
-    return 'Не рассчитан';
   };
 
   if (isLoading) {
@@ -343,9 +279,9 @@ const TreeDetailPage: React.FC = () => {
       <Container className="page-container">
         <div className="text-center">
           <h3>Заявка не найдена</h3>
-          <Button onClick={() => navigate('/trees')} variant="primary">
+          <button onClick={() => navigate('/trees')} className="btn-action-primary">
             Вернуться к списку заявок
-          </Button>
+          </button>
         </div>
       </Container>
     );
@@ -357,7 +293,7 @@ const TreeDetailPage: React.FC = () => {
         <Breadcrumbs items={[
           { label: 'Главная', path: '/' },
           { label: 'Мои заявки', path: '/trees' },
-          { label: `Заявка #${id}` }
+          { label: `Заявка` }
         ]} />
 
         <div className="page-content-with-margin">
@@ -367,39 +303,36 @@ const TreeDetailPage: React.FC = () => {
             </Alert>
           )}
 
-          {/* Кнопка подтверждения заявки для пользователя */}
-          {canEdit && treeItems.length > 0 && (
-            <div className="d-flex justify-content-end mb-4">
-              <Button 
-                variant="success" 
-                onClick={() => setShowSubmitModal(true)}
-                className="action-button confirm-button"
+          {/* Кнопка подтверждения заявки для пользователя - справа */}
+          <div className="d-flex justify-content-end mb-4">
+            {canEdit && treeItems.length > 0 && (
+              <button 
+                onClick={handleSubmitTree}
+                className="btn-action-primary"
               >
-                <img src={confirmIcon} alt="Подтвердить заявку" className="button-icon me-2" />
+                <img src={confirmIcon} alt="Подтвердить заявку" className="button-icon" />
                 Подтвердить заявку
-              </Button>
-            </div>
-          )}
+              </button>
+            )}
 
-          {/* Кнопки для модератора */}
-          {canModerate && (
-            <div className="d-flex justify-content-end mb-4 gap-2">
-              <Button 
-                variant="success" 
-                onClick={() => setShowCompleteModal(true)}
-                className="action-button"
-              >
-                Завершить заявку
-              </Button>
-              <Button 
-                variant="danger" 
-                onClick={() => handleCompleteTree('reject')}
-                className="action-button"
-              >
-                Отклонить заявку
-              </Button>
-            </div>
-          )}
+            {/* Кнопки для модератора - справа */}
+            {canModerate && (
+              <div className="d-flex gap-2">
+                <button 
+                  onClick={() => handleCompleteTree('complete')}
+                  className="btn-action-primary"
+                >
+                  Завершить заявку
+                </button>
+                <button 
+                  onClick={() => handleCompleteTree('reject')}
+                  className="btn-action-danger"
+                >
+                  Отклонить заявку
+                </button>
+              </div>
+            )}
+          </div>
 
           {/* Общая информация о заявке */}
           <div className="request-general-info">
@@ -408,11 +341,10 @@ const TreeDetailPage: React.FC = () => {
                 <span className="info-label">ОПИСАНИЕ НАХОДКИ</span>
                 {canEdit && <span className="text-warning"></span>}
               </div>
-              <Form.Control
-                as="textarea"
+              <textarea
                 rows={3}
-                value={treeData.description}
-                onChange={(e) => setTreeData({...treeData, description: e.target.value})}
+                value={localData.description}
+                onChange={(e) => handleDescriptionChange(e.target.value)}
                 placeholder="Опишите вашу находку..."
                 className="info-value-editable"
                 disabled={!canEdit}
@@ -424,13 +356,14 @@ const TreeDetailPage: React.FC = () => {
                 <span className="info-label">ЧИСЛО ВСЕХ КОЛЕЦ</span>
                 {canEdit && <span className="text-warning"></span>}
               </div>
-              <Form.Control
-                type="number"
-                value={treeData.total_rings}
-                onChange={(e) => setTreeData({...treeData, total_rings: e.target.value})}
+              <input
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                value={localData.totalRings}
+                onChange={(e) => handleTotalRingsChange(e.target.value)}
                 placeholder="Введите количество колец"
                 className="info-value-editable"
-                min="0"
                 disabled={!canEdit}
               />
             </div>
@@ -476,7 +409,7 @@ const TreeDetailPage: React.FC = () => {
                   
                   <div className="request-info-section">
                     {editingItem === item.anomaly_id ? (
-                      <Form.Control
+                      <input
                         type="text"
                         value={anomalousRings}
                         onChange={(e) => setAnomalousRings(e.target.value)}
@@ -490,12 +423,8 @@ const TreeDetailPage: React.FC = () => {
                       <div 
                         className={`editable-field ${canEdit ? 'clickable' : ''}`}
                         onClick={() => canEdit && handleEditItem(item)}
-                        style={{ 
-                          cursor: canEdit ? 'pointer' : 'default',
-                          background: canEdit ? 'rgba(255, 255, 255, 0.1)' : 'transparent'
-                        }}
                       >
-                        {item.anomalous_rings || ''}
+                        {getDisplayRings(item)}
                       </div>
                     )}
                   </div>
@@ -523,127 +452,39 @@ const TreeDetailPage: React.FC = () => {
               <div className="no-items">
                 <p>Нет аномалий в заявке</p>
                 {canEdit && (
-                  <Button onClick={() => navigate('/anomalies')} variant="primary" className="mt-3">
-                    <img src={addIcon} alt="Добавить" className="button-icon me-2" />
+                  <button onClick={() => navigate('/anomalies')} className="btn-action-outline mt-3">
+                    <img src={addIcon} alt="Добавить" className="button-icon" />
                     Добавить аномалии из каталога
-                  </Button>
+                  </button>
                 )}
               </div>
             )}
           </div>
 
-          {/* Кнопки действий */}
+          {/* Кнопки действий внизу */}
           {canEdit && (
             <div className="action-buttons-container">
-              <Button 
-                onClick={handleUpdateTree}
-                variant="primary"
-                className="action-button"
-              >
-                <img src={saveIcon} alt="Сохранить" className="button-icon me-2" />
-                Сохранить изменения
-              </Button>
-              
               {treeItems.length > 0 && (
-                <Button 
-                  variant="outline-warning" 
-                  onClick={() => setShowClearModal(true)}
-                  className="action-button"
+                <button 
+                  onClick={handleClearTree}
+                  className="btn-action-outline"
                 >
-                  <img src={deleteIcon} alt="Очистить" className="button-icon me-2" />
+                  <img src={deleteIcon} alt="Очистить" className="button-icon" />
                   Очистить заявку
-                </Button>
+                </button>
               )}
               
-              <Button 
+              <button 
                 onClick={() => navigate('/anomalies')}
-                variant="outline-primary"
-                className="action-button"
+                className="btn-action-outline"
               >
-                <img src={addIcon} alt="Добавить" className="button-icon me-2" />
+                <img src={addIcon} alt="Добавить" className="button-icon" />
                 Добавить аномалии
-              </Button>
+              </button>
             </div>
           )}
         </div>
       </Container>
-
-      {/* Модальные окна */}
-      <Modal 
-        show={showSubmitModal} 
-        onHide={() => setShowSubmitModal(false)}
-        centered
-        className="custom-modal"
-      >
-        <Modal.Header closeButton className="modal-header-custom">
-          <Modal.Title>Подтверждение заявки</Modal.Title>
-        </Modal.Header>
-        <Modal.Body className="modal-body-custom">
-          <p>Вы уверены, что хотите подтвердить эту заявку?</p>
-          <p className="text-muted">
-            После подтверждения заявка будет отправлена на рассмотрение модератору 
-            и вы не сможете её редактировать. Статус изменится на "сформирован".
-          </p>
-        </Modal.Body>
-        <Modal.Footer className="modal-footer-custom">
-          <Button variant="secondary" onClick={() => setShowSubmitModal(false)}>
-            Отмена
-          </Button>
-          <Button variant="success" onClick={handleSubmitTree}>
-            Подтвердить заявку
-          </Button>
-        </Modal.Footer>
-      </Modal>
-
-      <Modal 
-        show={showCompleteModal} 
-        onHide={() => setShowCompleteModal(false)}
-        centered
-        className="custom-modal"
-      >
-        <Modal.Header closeButton className="modal-header-custom">
-          <Modal.Title>Завершение заявки</Modal.Title>
-        </Modal.Header>
-        <Modal.Body className="modal-body-custom">
-          <p>Вы уверены, что хотите завершить эту заявку?</p>
-          <p className="text-muted">
-            После завершения будут рассчитаны итоговые годы и заявка перейдет в статус "завершён".
-          </p>
-        </Modal.Body>
-        <Modal.Footer className="modal-footer-custom">
-          <Button variant="secondary" onClick={() => setShowCompleteModal(false)}>
-            Отмена
-          </Button>
-          <Button variant="success" onClick={() => handleCompleteTree('complete')}>
-            Завершить заявку
-          </Button>
-        </Modal.Footer>
-      </Modal>
-
-      <Modal 
-        show={showClearModal} 
-        onHide={() => setShowClearModal(false)}
-        centered
-        className="custom-modal"
-      >
-        <Modal.Header closeButton className="modal-header-custom">
-          <Modal.Title>Очистка заявки</Modal.Title>
-        </Modal.Header>
-        <Modal.Body className="modal-body-custom">
-          <p>Вы уверены, что хотите очистить заявку?</p>
-          <p className="text-muted">
-            Все аномалии будут удалены, а поля описания очищены.
-          </p>
-        </Modal.Body>
-        <Modal.Footer className="modal-footer-custom">
-          <Button variant="secondary" onClick={() => setShowClearModal(false)}>
-            Отмена
-          </Button>
-          <Button variant="warning" onClick={handleClearTree}>
-            Очистить заявку
-          </Button>
-        </Modal.Footer>
-      </Modal>
     </div>
   );
 };
