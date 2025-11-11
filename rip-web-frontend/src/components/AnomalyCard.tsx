@@ -26,7 +26,7 @@ const AnomalyCard: React.FC<AnomalyCardProps> = ({ anomaly, onViewDetails }) => 
     }
 
     try {
-      await dispatch(addToTree(anomaly.id!)).unwrap();
+      await dispatch(addToTree(anomaly.id!)).unwrap(); //redux
       await syncCartWithApi();
       console.log('Добавлено в заявку:', anomaly.id);
     } catch (error) {

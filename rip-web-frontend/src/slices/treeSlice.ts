@@ -72,7 +72,7 @@ export const addToTree = createAsyncThunk(
   'trees/addToTree',
   async (anomalyId: number, { rejectWithValue }) => {
     try {
-      const response = await api.api.treesCurrentItemsCreate({ anomaly_id: anomalyId })
+      const response = await api.api.treesCurrentItemsCreate({ anomaly_id: anomalyId }) //axios
       return response.data
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || 'Ошибка добавления в заявку')

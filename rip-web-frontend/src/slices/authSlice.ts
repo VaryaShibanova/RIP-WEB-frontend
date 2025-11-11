@@ -22,8 +22,8 @@ export const loginUser = createAsyncThunk(
   'auth/loginUser',
   async (credentials: LoginRequest, { rejectWithValue }) => {
     try {
-      const response = await api.api.usersLoginCreate(credentials);
-      localStorage.setItem('token', response.data.token!);
+      const response = await api.api.usersLoginCreate(credentials); //axios
+      localStorage.setItem('token', response.data.token!); //localstorage
       return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || 'Ошибка авторизации');

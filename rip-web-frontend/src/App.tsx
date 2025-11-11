@@ -28,10 +28,10 @@ const PublicRoute: FC<{ children: React.ReactNode }> = ({ children }) => {
 };
 
 const App: FC = () => {
-  const { checkAuth } = useAuth();
+  const { checkAuth } = useAuth(); //кастомный хук
 
   useEffect(() => {
-    checkAuth();
+    checkAuth(); //проверка авторизации при загрузке
   }, [checkAuth]);
 
   return (
