@@ -38,7 +38,7 @@ const updateSW = registerSW({
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <Provider store={store}>
-      <BrowserRouter basename="/RIP-WEB-frontend">
+      <BrowserRouter basename={import.meta.env.PROD ? '' : '/RIP-WEB-frontend'}>
         <App />
       </BrowserRouter>
     </Provider>

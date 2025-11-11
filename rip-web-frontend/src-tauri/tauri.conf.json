@@ -5,7 +5,7 @@
   "identifier": "tree.rip-web-frontend",
   "build": {
     "frontendDist": "../dist",
-    "devUrl": "https://localhost:3000",
+    "devUrl": "http://localhost:3000/RIP-WEB-frontend/",
     "beforeDevCommand": "npm run dev",
     "beforeBuildCommand": "npm run build"
   },
