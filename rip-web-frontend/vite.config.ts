@@ -18,7 +18,7 @@ export default defineConfig({
       manifest: {
         name: "Дендроанализ",
         short_name: "Дендроанализ",
-        start_url: "/RIP-WEB-frontend/",
+        start_url: "./",
         display: "standalone",
         background_color: "#060F1E",
         theme_color: "#060F1E",
@@ -44,7 +44,7 @@ export default defineConfig({
       }
     }),
   ],
-  base: "/RIP-WEB-frontend/",
+  base: "./",
   server: {
     https:{
     key: fs.readFileSync(path.resolve(__dirname, 'cert.key')),
