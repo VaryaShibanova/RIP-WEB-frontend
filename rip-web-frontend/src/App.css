@@ -144,7 +144,6 @@ body {
     margin-top: 8px !important;
     min-width: 200px !important;
     backdrop-filter: blur(10px);
-    /* ДОБАВЬТЕ ЭТИ СТРОКИ */
     position: absolute !important;
     right: 0 !important;
     left: auto !important;
@@ -225,7 +224,6 @@ body {
     
     .navbar-dropdown-menu {
         min-width: 180px !important;
-        /* ПРАВИЛЬНОЕ ПОЗИЦИОНИРОВАНИЕ ДЛЯ МОБИЛЬНЫХ */
         position: fixed !important;
         top: 70px !important;
         right: 15px !important;
@@ -293,7 +291,7 @@ body {
     }
 }
 
-/* ГЛАВНАЯ СТРАНИЦА - ПРОСТОЙ И НАДЕЖНЫЙ ВАРИАНТ */
+/* ГЛАВНАЯ СТРАНИЦА */
 .home-page {
     background: #060F1E;
     min-height: 100vh;
@@ -329,7 +327,6 @@ body {
     width: 100%;
 }
 
-/* Исправления для текста на главной странице */
 .hero-title {
     font-size: 48px;
     font-weight: 300;
@@ -338,7 +335,6 @@ body {
     letter-spacing: 2.5px;
     margin-bottom: 25px;
     color: white;
-    /* Добавляем свойства для переноса */
     word-wrap: break-word;
     overflow-wrap: break-word;
     hyphens: auto;
@@ -353,7 +349,6 @@ body {
     max-width: 650px;
     margin-left: auto;
     margin-right: auto;
-    /* Добавляем свойства для переноса */
     word-wrap: break-word;
     overflow-wrap: break-word;
     hyphens: auto;
@@ -483,7 +478,7 @@ body {
     }
 }
 
-/* ДЕКОРАТИВНЫЕ ЭЛЕМЕНТЫ - УПРОЩЕННЫЕ */
+/* ДЕКОРАТИВНЫЕ ЭЛЕМЕНТЫ */
 .decoration {
     position: absolute;
     border-radius: 50%;
@@ -494,7 +489,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    overflow: hidden; /* ← ДОБАВЬТЕ ЭТО */
+    overflow: hidden;
 }
 
 .decoration::before {
@@ -505,12 +500,10 @@ body {
     background-repeat: no-repeat;
     background-position: center;
     opacity: 0.9;
-    /* ОГРАНИЧЬТЕ РАЗМЕР ВНУТРИ КРУГА */
     max-width: 80%;
     max-height: 80%;
 }
 
-/* Большой элемент - справа */
 .decoration-large {
     width: 260px;
     height: 260px;
@@ -525,7 +518,6 @@ body {
     filter: brightness(0) invert(1) sepia(1) hue-rotate(200deg) saturate(3) brightness(1.1);
 }
 
-/* Средний элемент - слева сверху */
 .decoration-medium {
     width: 200px;
     height: 200px;
@@ -540,7 +532,6 @@ body {
     filter: brightness(0) invert(1) sepia(1) hue-rotate(180deg) saturate(4) brightness(1.3);
 }
 
-/* Малый элемент - слева снизу */
 .decoration-small {
     width: 160px;
     height: 160px;
@@ -632,10 +623,8 @@ body {
     }
 }
 
-/* iPhone 13 и маленькие экраны */
 @media (max-width: 480px) {
     .decoration {
-        /* УБЕРИТЕ display: block - оставьте flex */
         display: flex;
     }
     
@@ -676,7 +665,6 @@ body {
     }
 }
 
-/* ОЧЕНЬ маленькие экраны (iPhone SE и подобные) */
 @media (max-width: 375px) {
     .decoration-large {
         width: 70px;
@@ -714,7 +702,6 @@ body {
         height: 15px;
     }
 }
-
 
 /* ОСНОВНОЙ КОНТЕЙНЕР ДЛЯ ДРУГИХ СТРАНИЦ */
 .page-container {
@@ -863,6 +850,7 @@ body {
     font-weight: 700;
 }
 
+/* АДАПТИВНЫЙ ГРИД С ПЛАВНЫМ ИЗМЕНЕНИЕМ КОЛОНОК */
 .anomalies-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
@@ -870,12 +858,12 @@ body {
     justify-content: center;
     margin: 0 auto;
     padding-bottom: 60px;
+    max-width: 1200px;
 }
 
 .anomaly-card {
     position: relative;
     width: 100%;
-    max-width: 394px;
     height: auto;
     min-height: 380px;
     background: rgba(255, 255, 255, 0.05);
@@ -884,7 +872,6 @@ body {
     padding: 25px;
     color: white;
     transition: all 0.3s ease;
-    margin: 0 auto;
     display: flex;
     flex-direction: column;
 }
@@ -915,62 +902,60 @@ body {
 }
 
 .anomaly-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 15px;
-  min-height: 60px;
-  gap: 10px;
-  width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 15px;
+    min-height: 60px;
+    gap: 10px;
+    width: 100%;
 }
 
 .anomaly-card h3 {
-  font-size: 17.97px;
-  font-weight: 400;
-  margin: 0;
-  flex: 1;
-  text-align: center;
-  padding: 0 10px;
-  line-height: 1.3;
-  min-height: 45px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  word-break: break-word;
-  /* Улучшения для адаптивности */
-  hyphens: auto; /* Перенос слов */
-  overflow-wrap: break-word; /* Перенос длинных слов */
+    font-size: 17.97px;
+    font-weight: 400;
+    margin: 0;
+    flex: 1;
+    text-align: center;
+    padding: 0 10px;
+    line-height: 1.3;
+    min-height: 45px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    word-break: break-word;
+    hyphens: auto;
+    overflow-wrap: break-word;
 }
 
-/* Центрирование кнопки add-b в кружке */
 .add-to-tree-btn {
-  width: 36px;
-  height: 36px;
-  background: rgba(255, 255, 255, 0.95);
-  border: none;
-  border-radius: 50%;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.3s ease;
-  padding: 0;
-  flex-shrink: 0;
-  margin-left: auto;
-  position: relative;
+    width: 36px;
+    height: 36px;
+    background: rgba(255, 255, 255, 0.95);
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    padding: 0;
+    flex-shrink: 0;
+    margin-left: auto;
+    position: relative;
 }
 
 .add-to-tree-btn img {
-  width: 20px;
-  height: 20px;
-  object-fit: contain;
-  filter: brightness(0.3);
-  display: block;
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  margin: 0;
+    width: 20px;
+    height: 20px;
+    object-fit: contain;
+    filter: brightness(0.3);
+    display: block;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    margin: 0;
 }
 
 .add-to-tree-btn:hover {
@@ -991,7 +976,30 @@ body {
     flex-shrink: 0;
 }
 
-/* Адаптивность страницы аномалий */
+/* Адаптивность страницы аномалий с учетом зума */
+@media (max-width: 1400px) {
+    .anomalies-grid {
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        gap: 25px;
+    }
+}
+
+@media (max-width: 1200px) {
+    .anomalies-grid {
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 20px;
+    }
+    
+    .anomaly-card {
+        min-height: 350px;
+        padding: 20px;
+    }
+    
+    .anomaly-card img {
+        height: 180px;
+    }
+}
+
 @media (max-width: 991px) {
     .page-title {
         font-size: 38px;
@@ -1012,7 +1020,6 @@ body {
     .tree-icon {
         width: 70px;
         height: 70px;
-        margin-left: 0;
     }
     
     .tree-icon img {
@@ -1021,18 +1028,16 @@ body {
     }
     
     .anomalies-grid {
-        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-        gap: 25px;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 20px;
     }
     
     .anomaly-card {
-        max-width: 100%;
-        min-height: 350px;
-        padding: 20px;
+        min-height: 330px;
     }
     
     .anomaly-card img {
-        height: 180px;
+        height: 170px;
     }
 }
 
@@ -1096,6 +1101,7 @@ body {
         grid-template-columns: 1fr;
         gap: 20px;
         padding-bottom: 40px;
+        max-width: 500px;
     }
     
     .anomaly-card {
@@ -1121,7 +1127,6 @@ body {
     .add-to-tree-btn {
         width: 32px;
         height: 32px;
-        min-width: 32px;
     }
     
     .add-to-tree-btn img {
@@ -1441,18 +1446,18 @@ body {
 
 /* Стили для неактивной корзины */
 .tree-icon.disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+    opacity: 0.5;
+    cursor: not-allowed;
 }
 
 .tree-count.disabled {
-  background-color: #9198AA !important;
-  color: #666 !important;
+    background-color: #9198AA !important;
+    color: #666 !important;
 }
 
 .grayscale {
-  filter: grayscale(100%);
-  opacity: 0.6;
+    filter: grayscale(100%);
+    opacity: 0.6;
 }
 
 /* Дополнительные улучшения для планшетов */
@@ -1467,11 +1472,6 @@ body {
     
     .page-container {
         padding: 50px 30px;
-    }
-    
-    .anomalies-grid {
-        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-        gap: 25px;
     }
 }
 
