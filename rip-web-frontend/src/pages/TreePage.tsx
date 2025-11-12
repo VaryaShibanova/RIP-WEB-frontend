@@ -21,9 +21,9 @@ const TreePage: React.FC = () => {
     dispatch(fetchUserTrees());
   }, [dispatch]);
 
-  const handleCreateNewTree = () => {
+  /*const handleCreateNewTree = () => {
     navigate('/anomalies');
-  };
+  };*/
 
   // Фильтрация для обычного пользователя
   const filteredTrees = trees.filter(tree => {
@@ -80,13 +80,13 @@ const TreePage: React.FC = () => {
       <div className="page-content-with-margin">
         <div className="d-flex justify-content-between align-items-center mb-4">
           <h1>Мои заявки на исследование</h1>
-          <Button 
+          {/*<Button 
             onClick={handleCreateNewTree}
             variant="primary"
             className="btn-custom-primary"
           >
             Создать новую заявку
-          </Button>
+          </Button>*/}
         </div>
 
         <Card className="mb-4">
