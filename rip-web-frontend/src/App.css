@@ -942,7 +942,7 @@ body {
   overflow-wrap: break-word; /* Перенос длинных слов */
 }
 
-/* Центрирование кнопки add-b в кружке */
+/* Центрирование кнопки add-b в кружке 
 .add-to-tree-btn {
   width: 36px;
   height: 36px;
@@ -977,7 +977,7 @@ body {
     transform: scale(1.15);
     background: white;
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-}
+}*/
 
 .anomaly-card .year {
     font-size: 14px;

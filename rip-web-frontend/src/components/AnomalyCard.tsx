@@ -1,8 +1,8 @@
 import React from 'react';
 import type { AnomalyShortResponse } from '../types';
-import { useCart } from '../hooks/useCart';
+//import { useCart } from '../hooks/useCart';
 import defaultImage from '/images/mock/main-page.png';
-import addIcon from '/images/mock/add-b.png';
+//import addIcon from '/images/mock/add-b.png';
 
 interface AnomalyCardProps {
   anomaly: AnomalyShortResponse;
@@ -10,14 +10,14 @@ interface AnomalyCardProps {
 }
 
 const AnomalyCard: React.FC<AnomalyCardProps> = ({ anomaly, onViewDetails }) => {
-  const { addItemToCart } = useCart();
+  //const { addItemToCart } = useCart();
 
-  const handleAddToTree = (e: React.MouseEvent) => {
+  /*const handleAddToTree = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     addItemToCart(anomaly);
     console.log('Добавлено в корзину:', anomaly.id);
-  };
+  };*/
 
   return (
     <div className="anomaly-card">
@@ -34,13 +34,13 @@ const AnomalyCard: React.FC<AnomalyCardProps> = ({ anomaly, onViewDetails }) => 
         />
         <div className="anomaly-header">
           <h3>{anomaly.name}</h3>
-          <button 
+          {/*<button 
             className="add-to-tree-btn"
             title="Добавить в исследование"
             onClick={handleAddToTree}
           >
             <img src={addIcon} alt="Добавить" />
-          </button>
+          </button>*/}
         </div>
         <div className="year">Год начала: {anomaly.year} г.</div>
       </div>
