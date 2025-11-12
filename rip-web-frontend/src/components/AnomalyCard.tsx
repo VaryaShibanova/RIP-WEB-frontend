@@ -13,8 +13,17 @@ interface AnomalyCardProps {
 
 const AnomalyCard: React.FC<AnomalyCardProps> = ({ anomaly, onViewDetails }) => {
   const dispatch = useAppDispatch();
-  const { isAuthenticated } = useAppSelector((state) => state.auth);
+  const { isAuthenticated, isLoading } = useAppSelector((state) => state.auth);
   const { syncCartWithApi } = useCart();
+
+  // Ждем завершения проверки авторизации
+  const shouldShowAddButton = !isLoading && isAuthenticated;
+
+  console.log('🔐 Auth debug:', { 
+    isAuthenticated, 
+    isLoading,
+    shouldShowAddButton 
+  });
 
   const handleAddToTree = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -26,7 +35,7 @@ const AnomalyCard: React.FC<AnomalyCardProps> = ({ anomaly, onViewDetails }) => 
     }
 
     try {
-      await dispatch(addToTree(anomaly.id!)).unwrap(); //redux
+      await dispatch(addToTree(anomaly.id!)).unwrap();
       await syncCartWithApi();
       console.log('Добавлено в заявку:', anomaly.id);
     } catch (error) {
@@ -49,14 +58,16 @@ const AnomalyCard: React.FC<AnomalyCardProps> = ({ anomaly, onViewDetails }) => 
         />
         <div className="anomaly-header">
           <h3>{anomaly.name}</h3>
-          <button 
-            className="add-to-tree-btn"
-            title={isAuthenticated ? "Добавить в исследование" : "Войдите для добавления"}
-            onClick={handleAddToTree}
-            disabled={!isAuthenticated}
-          >
-            <img src={addIcon} alt="Добавить" />
-          </button>
+          {/* Показываем кнопку ТОЛЬКО когда проверка авторизации завершена И пользователь авторизован */}
+          {shouldShowAddButton && (
+            <button 
+              className="add-to-tree-btn"
+              title="Добавить в исследование"
+              onClick={handleAddToTree}
+            >
+              <img src={addIcon} alt="Добавить" />
+            </button>
+          )}
         </div>
         <div className="year">Год начала: {anomaly.year} г.</div>
       </div>

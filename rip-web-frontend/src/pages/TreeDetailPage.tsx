@@ -451,12 +451,12 @@ const TreeDetailPage: React.FC = () => {
             ) : (
               <div className="no-items">
                 <p>Нет аномалий в заявке</p>
-                {canEdit && (
+                {/*{canEdit && (
                   <button onClick={() => navigate('/anomalies')} className="btn-action-outline mt-3">
                     <img src={addIcon} alt="Добавить" className="button-icon" />
                     Добавить аномалии из каталога
                   </button>
-                )}
+                )}*/}
               </div>
             )}
           </div>
