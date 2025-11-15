@@ -8,14 +8,14 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = 'django-insecure-krd4%d+ks*==4ej0-ym4rx0$_lj#zch_jg6(@*q1a5wx5pkl3-'
 DEBUG = True
-ALLOWED_HOSTS = ['*']  # Разрешаем все хосты для лабы
+ALLOWED_HOSTS = ['*']
 
 # Application definition
 INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'rest_framework',
-    'calculator',  # Твое приложение для расчетов
+    'calculator',
 ]
 
 MIDDLEWARE = [
@@ -24,7 +24,7 @@ MIDDLEWARE = [
     'django.contrib.sessions.middleware.SessionMiddleware',
 ]
 
-ROOT_URLCONF = 'tree_async.urls'  # Убедись что tree_async
+ROOT_URLCONF = 'tree_async.urls'
 
 TEMPLATES = [
     {
@@ -40,7 +40,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'tree_async.wsgi.application'  # Убедись что tree_async
+WSGI_APPLICATION = 'tree_async.wsgi.application'
 
 # Database
 DATABASES = {
@@ -58,8 +58,8 @@ REST_FRAMEWORK = {
 }
 
 # Настройки для взаимодействия с Go сервисом
-GO_SERVICE_URL = "http://localhost:8080"  # URL твоего Go сервиса
-CALLBACK_TOKEN = "your-secret-token-12345"  # Токен для авторизации
+GO_SERVICE_URL = "http://localhost:8080"
+CALLBACK_TOKEN = "abc12345"  # Простой токен для псевдо-авторизации
 
 # Internationalization
 LANGUAGE_CODE = 'en-us'
@@ -67,7 +67,7 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_TZ = True
 
-# Static files (не нужно для API)
+# Static files
 STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
