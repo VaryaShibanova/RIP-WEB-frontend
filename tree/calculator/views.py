@@ -80,20 +80,19 @@ def process_all_calculations_async(tree_id, tree_items):
         print(f"Waiting {delay_seconds} seconds for item {item['tree_item_id']}")
         time.sleep(delay_seconds)
         
-        # СЛУЧАЙНЫЙ РЕЗУЛЬТАТ
-        success = random.choice([True, False, True])
-        print(f"Calculation {'SUCCESS' if success else 'FAILED'} for item {item['tree_item_id']}")
-        
-        if success:
+        # ИСПРАВЛЕНО: УБИРАЕМ СЛУЧАЙНОСТЬ - ВСЕГДА ПЫТАЕМСЯ РАССЧИТАТЬ
+        try:
             calculated_year = calculate_year_for_anomaly(
                 item['total_rings'],
                 item['anomalous_rings'],
                 item['anomaly_year']
             )
             status = 'completed'
-        else:
+            print(f"✅ Calculation SUCCESS for item {item['tree_item_id']}: {calculated_year}")
+        except Exception as e:
             calculated_year = 0
             status = 'failed'
+            print(f"❌ Calculation FAILED for item {item['tree_item_id']}: {e}")
         
         results.append({
             'tree_item_id': item['tree_item_id'],
@@ -109,25 +108,46 @@ def process_all_calculations_async(tree_id, tree_items):
     send_final_callback(tree_id, results)
 
 def calculate_year_for_anomaly(total_rings, anomalous_rings, anomaly_year):
-    """Формула расчета calculated_year"""
-    print(f"Calculating: total_rings={total_rings}, anomalous_rings='{anomalous_rings}', anomaly_year={anomaly_year}")
+    """Формула расчета calculated_year с улучшенной обработкой ошибок"""
+    print(f"🔍 Calculating: total_rings={total_rings}, anomalous_rings='{anomalous_rings}', anomaly_year={anomaly_year}")
     
-    if anomalous_rings and anomalous_rings.strip():
-        try:
-            rings = [int(r.strip()) for r in anomalous_rings.split(',') if r.strip()]
-            max_ring = max(rings) if rings else 0
-            print(f"Parsed rings: {rings}, max_ring: {max_ring}")
-        except Exception as e:
-            print(f"Error parsing rings: {e}")
-            max_ring = 0
-    else:
-        max_ring = 0
-        print("No anomalous rings or empty string")
+    # Валидация входных данных
+    if not total_rings or total_rings <= 0:
+        raise ValueError(f"Invalid total_rings: {total_rings}")
     
-    calculated_year = anomaly_year + (total_rings - max_ring)
-    print(f"Calculated year: {calculated_year}")
+    if not anomaly_year or anomaly_year <= 0:
+        raise ValueError(f"Invalid anomaly_year: {anomaly_year}")
     
-    return calculated_year
+    if not anomalous_rings or not anomalous_rings.strip():
+        raise ValueError("Empty anomalous_rings")
+    
+    try:
+        # Парсинг аномальных колец
+        rings = [int(r.strip()) for r in anomalous_rings.split(',') if r.strip()]
+        if not rings:
+            raise ValueError("No valid rings found after parsing")
+        
+        max_ring = max(rings)
+        print(f"   Parsed rings: {rings}, max_ring: {max_ring}")
+        
+        # Проверка валидности
+        if max_ring > total_rings:
+            raise ValueError(f"Max ring {max_ring} exceeds total rings {total_rings}")
+        
+        if any(ring <= 0 for ring in rings):
+            raise ValueError(f"Invalid ring values: {rings}")
+        
+        calculated_year = anomaly_year + (total_rings - max_ring)
+        print(f"   ✅ CALCULATION: {anomaly_year} + ({total_rings} - {max_ring}) = {calculated_year}")
+        
+        return calculated_year
+        
+    except ValueError as e:
+        print(f"   ❌ CALCULATION ERROR: {e}")
+        raise
+    except Exception as e:
+        print(f"   ❌ UNEXPECTED ERROR: {e}")
+        raise
 
 def send_callback_to_go_service(tree_id, tree_item_id, calculated_year, status):
     """Callback для каждого TreeItem"""
