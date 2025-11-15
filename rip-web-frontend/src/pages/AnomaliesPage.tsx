@@ -15,6 +15,7 @@ import userIcon from '/images/mock/user-icon.jpg';
 const AnomaliesPage: React.FC = () => {
   const [anomalies, setAnomalies] = useState<AnomalyShortResponse[]>([]);
   const [loading, setLoading] = useState(true);
+  const [draftTreeId, setDraftTreeId] = useState<number | null>(null);
   
   const { 
     searchTerm, 
@@ -23,15 +24,29 @@ const AnomaliesPage: React.FC = () => {
   } = useSearch();
   
   const { syncCartWithApi, itemCount } = useCart();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
     loadAnomaliesWithCurrentSearch();
     if (isAuthenticated) {
       syncCartWithApi();
+      loadUserDraftTree();
     }
-  }, []);
+  }, [isAuthenticated]);
+
+  const loadUserDraftTree = async () => {
+    try {
+      // Загружаем заявки пользователя чтобы найти черновик
+      const response = await api.api.treesList();
+      const draft = response.data.trees?.find(tree => tree.status === 'черновик');
+      if (draft) {
+        setDraftTreeId(draft.id!);
+      }
+    } catch (error) {
+      console.error('Error loading draft tree:', error);
+    }
+  };
 
   const loadAnomaliesWithCurrentSearch = async () => {
     if (searchTerm.trim()) {
@@ -73,9 +88,16 @@ const AnomaliesPage: React.FC = () => {
     navigate(`/anomalies/${id}`);
   };
 
+  // ПЕРЕХОД ТОЛЬКО НА ДЕТАЛЬНУЮ СТРАНИЦУ ЗАЯВКИ (ЧЕРНОВИКА)
   const handleCartClick = () => {
     if (isAuthenticated) {
-      navigate('/trees');
+      if (draftTreeId) {
+        // Переходим на детальную страницу существующего черновика
+        navigate(`/trees/${draftTreeId}`);
+      } else {
+        // Если черновика нет, создаем новый и переходим на его детальную страницу
+        navigate('/trees/new'); // или другая логика создания
+      }
     } else {
       navigate('/login');
     }
@@ -116,16 +138,18 @@ const AnomaliesPage: React.FC = () => {
             </button>
           </div>
           
-          {/* Иконка заявки справа от поиска */}
+          {/* Иконка корзины - переход ТОЛЬКО на детальную страницу заявки */}
           <div className="tree-icon-container">
             <div 
               className={`tree-icon ${!isAuthenticated ? 'disabled' : ''}`}
               onClick={handleCartClick}
-              title={isAuthenticated ? "Мои заявки" : "Войдите для доступа к заявкам"}
+              title={isAuthenticated ? 
+                (draftTreeId ? "Моя заявка (черновик)" : "Создать новую заявку") 
+                : "Войдите для доступа к заявке"}
             >
               <img 
                 src={userIcon} 
-                alt="Мои заявки" 
+                alt="Моя заявка" 
                 className={!isAuthenticated ? "grayscale" : ""}
               />
               {isAuthenticated && itemCount > 0 && (

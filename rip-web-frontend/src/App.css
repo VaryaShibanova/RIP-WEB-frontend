@@ -2329,4 +2329,146 @@ body {
         gap: 10px;
     }
 }
+.btn-save-small {
+  background: #28a745;
+  color: white;
+  border: none;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.btn-save-small:hover {
+  background: #218838;
+}
+
+.btn-save-inline, .btn-cancel-inline {
+  background: #28a745;
+  color: white;
+  border: none;
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-size: 12px;
+  cursor: pointer;
+  margin-left: 4px;
+}
+
+.btn-cancel-inline {
+  background: #6c757d;
+}
+
+.btn-save-inline:hover {
+  background: #218838;
+}
+
+.btn-cancel-inline:hover {
+  background: #5a6268;
+}
+
+.editing-container {
+  display: flex;
+  align-items: center;
+}
+
+.user-dropdown-toggle {
+  background: none !important;
+  border: none !important;
+}
+
+.nav-link-custom {
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+.nav-link-custom:hover {
+  color: white !important;
+}
+
+/* Общая кнопка сохранения */
+.btn-save-large {
+  background: #28a745;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-size: 14px;
+  cursor: pointer;
+  width: 100%;
+  transition: all 0.3s;
+}
+
+.btn-save-large:hover:not(:disabled) {
+  background: #218838;
+  transform: translateY(-1px);
+}
+
+.btn-save-large:disabled {
+  background: #6c757d;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Кнопка сохранения для аномальных колец */
+.btn-save-inline {
+  background: #28a745;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+  margin-left: 8px;
+  transition: all 0.2s;
+}
+
+.btn-save-inline:hover {
+  background: #218838;
+}
+
+.btn-cancel-inline {
+  background: #6c757d;
+  color: white;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+  margin-left: 4px;
+}
+
+.btn-cancel-inline:hover {
+  background: #5a6268;
+}
+
+.editing-container {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.anomalous-rings-input {
+  flex: 1;
+  padding: 6px 10px;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.unsaved-changes-warning {
+  color: #ffc107;
+  font-size: 12px;
+  margin-top: 4px;
+  font-style: italic;
+}
+
+/* Индикатор для корзины */
+.tree-icon.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.tree-icon:not(.disabled):hover {
+  transform: scale(1.1);
+  transition: transform 0.2s;
+}
 

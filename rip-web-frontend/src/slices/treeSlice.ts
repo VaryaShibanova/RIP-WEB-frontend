@@ -33,9 +33,9 @@ const initialState: TreeState = {
 // Для пользователя - загружаем все его заявки без фильтров
 export const fetchUserTrees = createAsyncThunk(
   'trees/fetchUserTrees',
-  async (_, { rejectWithValue }) => {
+  async (filters: { status?: string; date_from?: string; date_to?: string } = {}, { rejectWithValue }) => {
     try {
-      const response = await api.api.treesList()
+      const response = await api.api.treesList(filters)
       return response.data.trees || []
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || 'Ошибка загрузки заявок')
@@ -43,7 +43,6 @@ export const fetchUserTrees = createAsyncThunk(
   }
 )
 
-// Для модератора - загружаем с фильтрами
 export const fetchModeratorTrees = createAsyncThunk(
   'trees/fetchModeratorTrees',
   async (filters: { status?: string; date_from?: string; date_to?: string } | undefined, { rejectWithValue }) => {

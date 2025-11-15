@@ -1,72 +1,112 @@
-// TreePage.tsx - с улучшенной отладкой
-import React, { useState, useEffect } from 'react';
-import { Container, Table, Button, Form, Row, Col, Card } from 'react-bootstrap';
+import React, { useState, useEffect, useRef } from 'react';
+import { Container, Table, Button, Form, Row, Col, Card, Badge } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../hooks/redux';
-import { fetchUserTrees } from '../slices/treeSlice';
+import { fetchUserTrees, fetchModeratorTrees, completeTree } from '../slices/treeSlice';
 import Breadcrumbs from '../components/Breadcrumbs';
 import LoadingSpinner from '../components/LoadingSpinner';
 
 const TreePage: React.FC = () => {
   const [statusFilter, setStatusFilter] = useState('');
-  const [anomaliesFilter, setAnomaliesFilter] = useState('');
-
+  const [dateFrom, setDateFrom] = useState('');
+  const [dateTo, setDateTo] = useState('');
+  const [creatorFilter, setCreatorFilter] = useState('');
+  const [pollingCount, setPollingCount] = useState(0);
+  
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const { trees, isLoading, error } = useAppSelector((state) => state.trees);
   const { user } = useAppSelector((state) => state.auth);
 
+  const isModerator = user?.is_moderator;
+  const pollingRef = useRef<number | null>(null);
+
+  // Short polling для модератора
   useEffect(() => {
-    console.log('🔄 Загружаем заявки пользователя...');
-    dispatch(fetchUserTrees());
-  }, [dispatch]);
-
-  /*const handleCreateNewTree = () => {
-    navigate('/anomalies');
-  };*/
-
-  // Фильтрация для обычного пользователя
-  const filteredTrees = trees.filter(tree => {
-    // Фильтр по статусу
-    if (statusFilter) {
-      const treeStatus = (tree.status || 'черновик').toLowerCase().trim();
-      const filterStatus = statusFilter.toLowerCase().trim();
+    loadTrees();
+    
+    if (isModerator) {
+      if (pollingRef.current) {
+        clearInterval(pollingRef.current);
+      }
       
-      if (treeStatus !== filterStatus) {
-        return false;
-      }
-    }
-    
-    // Фильтр по количеству аномалий
-    if (anomaliesFilter) {
-      const count = tree.amount_of_anomalies || 0;
-      switch (anomaliesFilter) {
-        case '1-5':
-          return count >= 1 && count <= 5;
-        case '6-10':
-          return count >= 6 && count <= 10;
-        case '10+':
-          return count > 10;
-        default:
-          return true;
-      }
-    }
-    
-    return true;
-  });
+      pollingRef.current = window.setInterval(() => {
+        setPollingCount(prev => prev + 1);
+        loadTrees();
+      }, 3000);
 
-  // Детальная отладка
-  useEffect(() => {
-    console.log('🔍 TreePage ОТЛАДКА:', {
-      user: user,
-      всеЗаявкиИзAPI: trees,
-      отфильтрованныеЗаявки: filteredTrees,
-      фильтрСтатуса: statusFilter,
-      заявкиСРазнымиСтатусами: Array.from(new Set(trees.map(t => t.status || 'черновик')))
-    });
-  }, [trees, filteredTrees, statusFilter, user]);
+      return () => {
+        if (pollingRef.current) {
+          clearInterval(pollingRef.current);
+          pollingRef.current = null;
+        }
+      };
+    }
+  }, [statusFilter, dateFrom, dateTo, isModerator]);
 
-  if (isLoading) {
+  const loadTrees = () => {
+    const filters: any = {};
+    
+    // ФИЛЬТРАЦИЯ ДЛЯ ВСЕХ ПОЛЬЗОВАТЕЛЕЙ
+    if (statusFilter) filters.status = statusFilter;
+    if (dateFrom) filters.date_from = dateFrom;
+    if (dateTo) filters.date_to = dateTo;
+
+    if (isModerator) {
+      dispatch(fetchModeratorTrees(filters));
+    } else {
+      // ПЕРЕДАЕМ ФИЛЬТРЫ И ДЛЯ ОБЫЧНОГО ПОЛЬЗОВАТЕЛЯ
+      dispatch(fetchUserTrees(filters));
+    }
+  };
+
+  // Фильтрация по создателю на фронтенде ТОЛЬКО для модератора
+  const filteredTrees = isModerator 
+    ? trees.filter(tree => {
+        if (!creatorFilter) return true;
+        return tree.creator?.toLowerCase().includes(creatorFilter.toLowerCase());
+      })
+    : trees; // Для обычного пользователя вся фильтрация на бэкенде
+
+  // Уникальные создатели для фильтра (только для модератора)
+  const uniqueCreators = isModerator 
+    ? Array.from(new Set(trees.map(tree => tree.creator).filter(Boolean))) as string[]
+    : [];
+
+  const handleCompleteTree = async (treeId: number, action: 'complete' | 'reject') => {
+    try {
+      await dispatch(completeTree({
+        treeId,
+        action
+      })).unwrap();
+      loadTrees();
+    } catch (error) {
+      console.error('Error completing tree:', error);
+    }
+  };
+
+  const handleViewDetails = (treeId: number) => {
+    navigate(`/trees/${treeId}`);
+  };
+
+  const getStatusVariant = (status: string) => {
+    switch (status) {
+      case 'черновик': return 'secondary';
+      case 'сформирован': return 'warning';
+      case 'завершён': return 'success';
+      case 'отклонён': return 'danger';
+      default: return 'secondary';
+    }
+  };
+
+  const handleClearFilters = () => {
+    setStatusFilter('');
+    setDateFrom('');
+    setDateTo('');
+    setCreatorFilter('');
+  };
+
+  if (isLoading && pollingCount === 0) {
     return <LoadingSpinner text="Загрузка заявок..." />;
   }
 
@@ -74,25 +114,25 @@ const TreePage: React.FC = () => {
     <Container className="page-container">
       <Breadcrumbs items={[
         { label: 'Главная', path: '/' },
-        { label: 'Мои заявки' }
+        { label: isModerator ? 'Все заявки' : 'Мои заявки' }
       ]} />
 
       <div className="page-content-with-margin">
         <div className="d-flex justify-content-between align-items-center mb-4">
-          <h1>Мои заявки на исследование</h1>
-          {/*<Button 
-            onClick={handleCreateNewTree}
-            variant="primary"
-            className="btn-custom-primary"
-          >
-            Создать новую заявку
-          </Button>*/}
+          <h1>{isModerator ? 'Все заявки' : 'Мои заявки на исследование'}</h1>
+          {isModerator && (
+            <Badge bg="info" className="polling-badge">
+              Auto-update: {pollingCount}
+            </Badge>
+          )}
         </div>
 
+        {/* ФИЛЬТРЫ ДЛЯ ВСЕХ ПОЛЬЗОВАТЕЛЕЙ */}
         <Card className="mb-4">
           <Card.Body>
             <Row>
-              <Col md={6}>
+              {/* СТАТУС - ДЛЯ ВСЕХ */}
+              <Col md={isModerator ? 3 : 4}>
                 <Form.Group>
                   <Form.Label><strong>Статус заявки</strong></Form.Label>
                   <Form.Select
@@ -105,26 +145,62 @@ const TreePage: React.FC = () => {
                     <option value="завершён">Завершён</option>
                     <option value="отклонён">Отклонён</option>
                   </Form.Select>
-                  <Form.Text className="text-muted">
-                    Найдено заявок: {filteredTrees.length} из {trees.length}
-                  </Form.Text>
                 </Form.Group>
               </Col>
-              <Col md={6}>
+
+              {/* ДАТЫ - ДЛЯ ВСЕХ ПОЛЬЗОВАТЕЛЕЙ */}
+              <Col md={isModerator ? 3 : 4}>
                 <Form.Group>
-                  <Form.Label><strong>Количество аномалий</strong></Form.Label>
-                  <Form.Select
-                    value={anomaliesFilter}
-                    onChange={(e) => setAnomaliesFilter(e.target.value)}
-                  >
-                    <option value="">Любое количество</option>
-                    <option value="1-5">1-5 аномалий</option>
-                    <option value="6-10">6-10 аномалий</option>
-                    <option value="10+">Более 10 аномалий</option>
-                  </Form.Select>
+                  <Form.Label><strong>Дата от</strong></Form.Label>
+                  <Form.Control
+                    type="date"
+                    value={dateFrom}
+                    onChange={(e) => setDateFrom(e.target.value)}
+                  />
                 </Form.Group>
               </Col>
+              <Col md={isModerator ? 3 : 4}>
+                <Form.Group>
+                  <Form.Label><strong>Дата до</strong></Form.Label>
+                  <Form.Control
+                    type="date"
+                    value={dateTo}
+                    onChange={(e) => setDateTo(e.target.value)}
+                  />
+                </Form.Group>
+              </Col>
+
+              {/* СОЗДАТЕЛЬ - ТОЛЬКО ДЛЯ МОДЕРАТОРА */}
+              {isModerator && (
+                <Col md={3}>
+                  <Form.Group>
+                    <Form.Label><strong>Создатель</strong></Form.Label>
+                    <Form.Select
+                      value={creatorFilter}
+                      onChange={(e) => setCreatorFilter(e.target.value)}
+                    >
+                      <option value="">Все создатели</option>
+                      {uniqueCreators.map(creator => (
+                        <option key={creator} value={creator}>{creator}</option>
+                      ))}
+                    </Form.Select>
+                  </Form.Group>
+                </Col>
+              )}
             </Row>
+            <div className="d-flex justify-content-between align-items-center mt-3">
+              <Form.Text className="text-muted">
+                Показано: {filteredTrees.length} заявок
+                {isModerator && ' • Обновляется каждые 3 секунды'}
+              </Form.Text>
+              <Button 
+                variant="outline-secondary" 
+                size="sm" 
+                onClick={handleClearFilters}
+              >
+                Очистить фильтры
+              </Button>
+            </div>
           </Card.Body>
         </Card>
 
@@ -137,44 +213,32 @@ const TreePage: React.FC = () => {
         <Table striped bordered hover responsive className="bg-dark">
           <thead className="table-dark">
             <tr>
+              <th>ID</th>
               <th>Статус</th>
               <th>Количество аномалий</th>
               <th>Финальный год</th>
+              {isModerator && <th>Создатель</th>}
+              {isModerator && <th>Модератор</th>}
               <th>Действия</th>
             </tr>
           </thead>
           <tbody>
             {filteredTrees.length === 0 ? (
               <tr>
-                <td colSpan={4} className="text-center py-4">
-                  {trees.length === 0 ? 'У вас пока нет заявок' : 'Заявки не найдены по выбранным фильтрам'}
-                  {statusFilter && trees.length > 0 && (
-                    <div className="mt-2">
-                      <small className="text-muted">
-                        Текущий фильтр: "{statusFilter}"
-                        <br />
-                        Доступные статусы в API: {Array.from(new Set(trees.map(t => t.status || 'черновик'))).join(', ')}
-                      </small>
-                    </div>
-                  )}
+                <td colSpan={isModerator ? 7 : 5} className="text-center py-4">
+                  {trees.length === 0 ? 'Заявки не найдены' : 'Заявки не найдены по выбранным фильтрам'}
                 </td>
               </tr>
             ) : (
               filteredTrees.map((tree) => (
                 <tr key={tree.id}>
                   <td>
-                    <span 
-                      className={`status-badge status-${tree.status || 'черновик'}`}
-                      style={{
-                        padding: '4px 8px',
-                        borderRadius: '4px',
-                        fontSize: '0.875rem',
-                        fontWeight: '500',
-                        textTransform: 'lowercase'
-                      }}
-                    >
+                    <strong>#{tree.id}</strong>
+                  </td>
+                  <td>
+                    <Badge bg={getStatusVariant(tree.status || 'черновик')}>
                       {tree.status || 'черновик'}
-                    </span>
+                    </Badge>
                   </td>
                   <td>
                     <span className="anomalies-count">
@@ -186,14 +250,48 @@ const TreePage: React.FC = () => {
                       {tree.final_year ? `${tree.final_year} г.` : 'Не рассчитан'}
                     </span>
                   </td>
+                  {isModerator && (
+                    <>
+                      <td>
+                        <span className="creator">
+                          {tree.creator || 'Неизвестно'}
+                        </span>
+                      </td>
+                      <td>
+                        <span className="moderator">
+                          {tree.moderator || 'Не назначен'}
+                        </span>
+                      </td>
+                    </>
+                  )}
                   <td>
-                    <Button
-                      onClick={() => navigate(`/trees/${tree.id}`)}
-                      variant="outline-primary"
-                      size="sm"
-                    >
-                      {tree.status === 'черновик' ? 'Продолжить' : 'Просмотреть'}
-                    </Button>
+                    <div className="d-flex gap-2 flex-wrap">
+                      <Button
+                        onClick={() => handleViewDetails(tree.id!)}
+                        variant="outline-primary"
+                        size="sm"
+                      >
+                        Просмотреть
+                      </Button>
+                      {isModerator && tree.status === 'сформирован' && (
+                        <>
+                          <Button
+                            onClick={() => handleCompleteTree(tree.id!, 'complete')}
+                            variant="outline-success"
+                            size="sm"
+                          >
+                            ✅ Завершить
+                          </Button>
+                          <Button
+                            onClick={() => handleCompleteTree(tree.id!, 'reject')}
+                            variant="outline-danger"
+                            size="sm"
+                          >
+                            ❌ Отклонить
+                          </Button>
+                        </>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))

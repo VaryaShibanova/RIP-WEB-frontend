@@ -22,8 +22,8 @@ export const loginUser = createAsyncThunk(
   'auth/loginUser',
   async (credentials: LoginRequest, { rejectWithValue }) => {
     try {
-      const response = await api.api.usersLoginCreate(credentials); //axios
-      localStorage.setItem('token', response.data.token!); //localstorage
+      const response = await api.api.usersLoginCreate(credentials);
+      localStorage.setItem('token', response.data.token!);
       return response.data;
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || 'Ошибка авторизации');
@@ -69,12 +69,14 @@ export const logoutUser = createAsyncThunk(
   }
 );
 
+// ИСПРАВЛЕННЫЙ МЕТОД - не обновляет весь пользователя, только логин
 export const updateUserProfile = createAsyncThunk(
   'auth/updateUserProfile',
   async (userData: { login?: string }, { rejectWithValue }) => {
     try {
       const response = await api.api.usersProfileUpdate(userData);
-      return response.data;
+      // Возвращаем только обновленные данные, не весь объект пользователя
+      return { login: response.data.login };
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || 'Ошибка обновления профиля');
     }
@@ -142,9 +144,11 @@ const authSlice = createSlice({
         state.isAuthenticated = false;
         state.error = null;
       })
-      // Update Profile
+      // Update Profile - ИСПРАВЛЕНО: обновляем только логин
       .addCase(updateUserProfile.fulfilled, (state, action) => {
-        state.user = action.payload;
+        if (state.user) {
+          state.user.login = action.payload.login;
+        }
       });
   },
 });

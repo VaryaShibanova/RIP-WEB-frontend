@@ -1,9 +1,10 @@
+// types/index.ts
 // Re-export types from generated API
 export type {
   HandlerAnomalyShortResponse as AnomalyShortResponse,
   HandlerAnomalyDetailResponse as AnomalyDetailResponse,
   HandlerAnomaliesListResponse as AnomaliesListResponse,
-  HandlerTreeShortResponse as TreeShortResponse,
+  //HandlerTreeShortResponse as TreeShortResponse, // УДАЛИТЬ этот re-export если создаем свой
   HandlerTreeDetailResponse as TreeDetailResponse,
   HandlerTreeResponse as TreeResponse,
   HandlerTreeItemResponse as TreeItemResponse,
@@ -36,3 +37,13 @@ export interface SearchState {
   recentSearches: string[];
 }
 
+// Расширенный интерфейс для TreeShortResponse с дополнительными полями
+export interface TreeShortResponse {
+  id?: number;
+  amount_of_anomalies?: number;
+  creator?: string;
+  moderator?: string;
+  final_year?: number;
+  status?: string;
+  completed_anomalies?: number;
+}

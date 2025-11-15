@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Navbar, Dropdown } from 'react-bootstrap';
+import { Navbar, Nav, Dropdown } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../hooks/redux';
 import { logoutUser } from '../slices/authSlice';
@@ -26,34 +26,13 @@ const CustomNavbar: React.FC = () => {
 
   const draftTree = trees.find(tree => tree.status === 'черновик');
 
-  const handleCatalogClick = () => {
-    navigate('/anomalies');
-    setShowDropdown(false);
-  };
-
-  const handleLoginClick = () => {
-    navigate('/login');
-    setShowDropdown(false);
-  };
-
   const handleLogoutClick = async () => {
     try {
       await dispatch(logoutUser()).unwrap();
       navigate('/');
-      setShowDropdown(false);
     } catch (error) {
       console.error('Logout error:', error);
     }
-  };
-
-  const handleProfileClick = () => {
-    navigate('/profile');
-    setShowDropdown(false);
-  };
-
-  const handleTreesClick = () => {
-    navigate('/trees');
-    setShowDropdown(false);
   };
 
   const handleCartClick = () => {
@@ -66,7 +45,6 @@ const CustomNavbar: React.FC = () => {
     } else {
       navigate('/login');
     }
-    setShowDropdown(false);
   };
 
   return (
@@ -81,13 +59,53 @@ const CustomNavbar: React.FC = () => {
           <span className="navbar-brand-text">ДЕНДРОАНАЛИЗ</span>
         </Navbar.Brand>
         
-        <div className="navbar-nav-container">
-          {/* УДАЛЕН БЛОК С TREE-ICON-CONTAINER */}
+        {/* Desktop Navigation */}
+        <Nav className="d-none d-lg-flex me-auto">
+          <Nav.Link as={Link} to="/anomalies" className="nav-link-custom">
+            Каталог аномалий
+          </Nav.Link>
+          {isAuthenticated && (
+            <Nav.Link as={Link} to="/trees" className="nav-link-custom">
+              Мои заявки
+            </Nav.Link>
+          )}
+        </Nav>
 
+        <div className="navbar-nav-container">
+          {/* Desktop User Menu */}
+          <div className="d-none d-lg-flex align-items-center">
+            {isAuthenticated ? (
+              <Dropdown align="end">
+                <Dropdown.Toggle variant="dark" id="user-dropdown" className="user-dropdown-toggle">
+                  {user?.login || 'Профиль'}
+                </Dropdown.Toggle>
+                <Dropdown.Menu className="navbar-dropdown-menu">
+                  <Dropdown.Item as={Link} to="/profile" className="navbar-dropdown-item">
+                    Профиль
+                  </Dropdown.Item>
+                  <Dropdown.Divider />
+                  <Dropdown.Item onClick={handleLogoutClick} className="navbar-dropdown-item">
+                    Выйти
+                  </Dropdown.Item>
+                </Dropdown.Menu>
+              </Dropdown>
+            ) : (
+              <div className="d-flex gap-2">
+                <Nav.Link as={Link} to="/login" className="nav-link-custom">
+                  Войти
+                </Nav.Link>
+                <Nav.Link as={Link} to="/register" className="nav-link-custom">
+                  Регистрация
+                </Nav.Link>
+              </div>
+            )}
+          </div>
+
+          {/* Mobile Burger Menu */}
           <Dropdown 
             show={showDropdown} 
             onToggle={(isOpen) => setShowDropdown(isOpen)}
-            className="navbar-dropdown"
+            className="d-lg-none navbar-dropdown"
           >
             <Dropdown.Toggle as={CustomToggle} id="navbar-dropdown">
               <div className="hamburger-icon">
@@ -99,8 +117,10 @@ const CustomNavbar: React.FC = () => {
 
             <Dropdown.Menu className="navbar-dropdown-menu">
               <Dropdown.Item 
-                onClick={handleCatalogClick}
+                as={Link}
+                to="/anomalies"
                 className="navbar-dropdown-item"
+                onClick={() => setShowDropdown(false)}
               >
                 Каталог аномалий
               </Dropdown.Item>
@@ -108,14 +128,18 @@ const CustomNavbar: React.FC = () => {
               {isAuthenticated ? (
                 <>
                   <Dropdown.Item 
-                    onClick={handleTreesClick}
+                    as={Link}
+                    to="/trees"
                     className="navbar-dropdown-item"
+                    onClick={() => setShowDropdown(false)}
                   >
                     Мои заявки
                   </Dropdown.Item>
                   <Dropdown.Item 
-                    onClick={handleProfileClick}
+                    as={Link}
+                    to="/profile"
                     className="navbar-dropdown-item"
+                    onClick={() => setShowDropdown(false)}
                   >
                     {user?.login || 'Профиль'}
                   </Dropdown.Item>
@@ -130,8 +154,10 @@ const CustomNavbar: React.FC = () => {
               ) : (
                 <>
                   <Dropdown.Item 
-                    onClick={handleLoginClick}
+                    as={Link}
+                    to="/login"
                     className="navbar-dropdown-item"
+                    onClick={() => setShowDropdown(false)}
                   >
                     Войти
                   </Dropdown.Item>
