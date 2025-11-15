@@ -18,7 +18,7 @@ export default defineConfig({
       manifest: {
         name: "Дендроанализ",
         short_name: "Дендроанализ",
-        start_url: "/RIP-WEB-frontend/",
+        start_url: "/",
         display: "standalone",
         background_color: "#060F1E",
         theme_color: "#060F1E",
@@ -44,18 +44,16 @@ export default defineConfig({
       }
     }),
   ],
-  base: "/RIP-WEB-frontend/",
+  base: "/", // ИЗМЕНИТЕ НА КОРНЕВОЙ ПУТЬ
   server: {
     https:{
-    key: fs.readFileSync(path.resolve(__dirname, 'cert.key')),
-    cert: fs.readFileSync(path.resolve(__dirname, 'cert.crt')),
-  },
+      key: fs.readFileSync(path.resolve(__dirname, 'cert.key')),
+      cert: fs.readFileSync(path.resolve(__dirname, 'cert.crt')),
+    },
     proxy: {
       "/api": {
         target: "http://localhost:8080",
-        //target: "http://192.168.8.101:8080",
         changeOrigin: true,
-        
       },
     },
     middlewareMode: false,
@@ -65,5 +63,9 @@ export default defineConfig({
     host: true,
     strictPort: true,
     port: 3000,
+  },
+  build: {
+    outDir: 'dist',
+    assetsDir: 'assets',
   },
 })

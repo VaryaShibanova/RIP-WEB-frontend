@@ -10,10 +10,11 @@ export interface AuthState {
   error: string | null;
 }
 
+// ИНИЦИАЛИЗИРУЕМ ИЗ localStorage, но isAuthenticated = false пока не проверим
 const initialState: AuthState = {
   user: null,
   token: localStorage.getItem('token'),
-  isAuthenticated: !!localStorage.getItem('token'),
+  isAuthenticated: false,
   isLoading: false,
   error: null,
 };
@@ -23,9 +24,11 @@ export const loginUser = createAsyncThunk(
   async (credentials: LoginRequest, { rejectWithValue }) => {
     try {
       const response = await api.api.usersLoginCreate(credentials);
-      localStorage.setItem('token', response.data.token!);
-      return response.data;
+      const token = response.data.token!;
+      localStorage.setItem('token', token);
+      return { ...response.data, token };
     } catch (error: any) {
+      localStorage.removeItem('token');
       return rejectWithValue(error.response?.data?.error || 'Ошибка авторизации');
     }
   }
@@ -47,9 +50,15 @@ export const getCurrentUser = createAsyncThunk(
   'auth/getCurrentUser',
   async (_, { rejectWithValue }) => {
     try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('No token found');
+      }
+      
       const response = await api.api.usersMeList();
       return response.data;
     } catch (error: any) {
+      localStorage.removeItem('token');
       return rejectWithValue(error.response?.data?.error || 'Ошибка получения данных пользователя');
     }
   }
@@ -60,22 +69,19 @@ export const logoutUser = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       await api.api.usersLogoutCreate();
-      localStorage.removeItem('token');
-      return null;
     } catch (error: any) {
+      // Игнорируем ошибки логаута на сервере
+    } finally {
       localStorage.removeItem('token');
-      return rejectWithValue(error.response?.data?.error || 'Ошибка выхода');
     }
   }
 );
 
-// ИСПРАВЛЕННЫЙ МЕТОД - не обновляет весь пользователя, только логин
 export const updateUserProfile = createAsyncThunk(
   'auth/updateUserProfile',
   async (userData: { login?: string }, { rejectWithValue }) => {
     try {
       const response = await api.api.usersProfileUpdate(userData);
-      // Возвращаем только обновленные данные, не весь объект пользователя
       return { login: response.data.login };
     } catch (error: any) {
       return rejectWithValue(error.response?.data?.error || 'Ошибка обновления профиля');
@@ -89,6 +95,15 @@ const authSlice = createSlice({
   reducers: {
     clearError: (state) => {
       state.error = null;
+    },
+    // Action для принудительного сброса авторизации
+    forceLogout: (state) => {
+      state.user = null;
+      state.token = null;
+      state.isAuthenticated = false;
+      state.isLoading = false;
+      state.error = null;
+      localStorage.removeItem('token');
     },
   },
   extraReducers: (builder) => {
@@ -127,24 +142,36 @@ const authSlice = createSlice({
         state.error = action.payload as string;
       })
       // Get Current User
+      .addCase(getCurrentUser.pending, (state) => {
+        state.isLoading = true;
+      })
       .addCase(getCurrentUser.fulfilled, (state, action) => {
         state.user = action.payload;
         state.isAuthenticated = true;
+        state.isLoading = false;
+        state.token = localStorage.getItem('token');
       })
       .addCase(getCurrentUser.rejected, (state) => {
         state.user = null;
         state.isAuthenticated = false;
         state.token = null;
-        localStorage.removeItem('token');
+        state.isLoading = false;
       })
       // Logout
       .addCase(logoutUser.fulfilled, (state) => {
         state.user = null;
         state.token = null;
         state.isAuthenticated = false;
+        state.isLoading = false;
         state.error = null;
       })
-      // Update Profile - ИСПРАВЛЕНО: обновляем только логин
+      .addCase(logoutUser.rejected, (state) => {
+        state.user = null;
+        state.token = null;
+        state.isAuthenticated = false;
+        state.isLoading = false;
+      })
+      // Update Profile
       .addCase(updateUserProfile.fulfilled, (state, action) => {
         if (state.user) {
           state.user.login = action.payload.login;
@@ -153,5 +180,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { clearError } = authSlice.actions;
+export const { clearError, forceLogout } = authSlice.actions;
 export default authSlice.reducer;

@@ -9,19 +9,6 @@ import './index.css'
 
 import { registerSW } from 'virtual:pwa-register'
 
-if (import.meta.env.DEV) {
-  localStorage.removeItem('debug');
-  sessionStorage.clear();
-  
-  if ('caches' in window) {
-    caches.keys().then(names => {
-      names.forEach(name => {
-        caches.delete(name);
-      });
-    });
-  }
-}
-
 const updateSW = registerSW({
   onNeedRefresh() {
     updateSW();
@@ -34,7 +21,7 @@ const updateSW = registerSW({
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <Provider store={store}>
-      <BrowserRouter basename="/RIP-WEB-frontend">
+      <BrowserRouter> {/* УБЕРИТЕ BASENAME */}
         <App />
       </BrowserRouter>
     </Provider>

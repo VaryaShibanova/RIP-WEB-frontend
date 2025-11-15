@@ -12,27 +12,22 @@ import ProfilePage from './pages/ProfilePage';
 import TreePage from './pages/TreePage';
 import TreeDetailPage from './pages/TreeDetailPage';
 import ProtectedRoute from './components/ProtectedRoute';
-import { useAuth } from './hooks/useAuth';
-import LoadingSpinner from './components/LoadingSpinner';
+import { useAppDispatch } from './hooks/redux';
+import { forceLogout } from './slices/authSlice';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './App.css';
 
 const PublicRoute: FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { isAuthenticated, isLoading } = useAuth();
-  
-  if (isLoading) {
-    return <LoadingSpinner text="Проверка авторизации..." />;
-  }
-  
-  return !isAuthenticated ? <>{children}</> : <Navigate to="/" replace />;
+  return <>{children}</>;
 };
 
 const App: FC = () => {
-  const { checkAuth } = useAuth(); //кастомный хук
+  const dispatch = useAppDispatch();
 
   useEffect(() => {
-    checkAuth(); //проверка авторизации при загрузке
-  }, [checkAuth]);
+    // ПРИНУДИТЕЛЬНЫЙ СБРОС АВТОРИЗАЦИИ ПРИ КАЖДОЙ ПЕРЕЗАГРУЗКЕ
+    dispatch(forceLogout());
+  }, [dispatch]);
 
   return (
     <div className="d-flex flex-column min-vh-100">
@@ -44,7 +39,7 @@ const App: FC = () => {
           <Route path="/anomalies" element={<AnomaliesPage />} />
           <Route path="/anomalies/:id" element={<AnomalyDetailPage />} />
           
-          {/* Auth routes - только для неавторизованных */}
+          {/* Auth routes */}
           <Route path="/login" element={
             <PublicRoute>
               <LoginPage />

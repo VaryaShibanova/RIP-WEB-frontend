@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Container, Table, Button, Form, Row, Col, Card, Badge } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../hooks/redux';
@@ -7,11 +7,12 @@ import Breadcrumbs from '../components/Breadcrumbs';
 import LoadingSpinner from '../components/LoadingSpinner';
 
 const TreePage: React.FC = () => {
-  const [statusFilter, setStatusFilter] = useState('');
-  const [dateFrom, setDateFrom] = useState('');
-  const [dateTo, setDateTo] = useState('');
-  const [creatorFilter, setCreatorFilter] = useState('');
-  const [pollingCount, setPollingCount] = useState(0);
+  const [filters, setFilters] = useState({
+    status: '',
+    dateFrom: '',
+    dateTo: '',
+    creator: ''
+  });
   
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
@@ -21,20 +22,37 @@ const TreePage: React.FC = () => {
   const isModerator = user?.is_moderator;
   const pollingRef = useRef<number | null>(null);
 
-  // Short polling для модератора
+  // useCallback чтобы функция не пересоздавалась при каждом рендере
+  const loadTrees = useCallback(() => {
+    const apiFilters: any = {};
+    
+    if (filters.status) apiFilters.status = filters.status;
+    if (filters.dateFrom) apiFilters.date_from = filters.dateFrom;
+    if (filters.dateTo) apiFilters.date_to = filters.dateTo;
+
+    if (isModerator) {
+      dispatch(fetchModeratorTrees(apiFilters));
+    } else {
+      dispatch(fetchUserTrees(apiFilters));
+    }
+  }, [filters, isModerator, dispatch]);
+
+  // Short polling только для модератора
   useEffect(() => {
-    loadTrees();
+    loadTrees(); // Первоначальная загрузка
     
     if (isModerator) {
+      // Очищаем предыдущий интервал
       if (pollingRef.current) {
         clearInterval(pollingRef.current);
       }
       
+      // Запускаем новый интервал
       pollingRef.current = window.setInterval(() => {
-        setPollingCount(prev => prev + 1);
         loadTrees();
-      }, 3000);
+      }, 5000); // 5 секунд
 
+      // Очистка при размонтировании
       return () => {
         if (pollingRef.current) {
           clearInterval(pollingRef.current);
@@ -42,31 +60,29 @@ const TreePage: React.FC = () => {
         }
       };
     }
-  }, [statusFilter, dateFrom, dateTo, isModerator]);
+  }, [loadTrees, isModerator]); // Зависимости: loadTrees и isModerator
 
-  const loadTrees = () => {
-    const filters: any = {};
-    
-    // ФИЛЬТРАЦИЯ ДЛЯ ВСЕХ ПОЛЬЗОВАТЕЛЕЙ
-    if (statusFilter) filters.status = statusFilter;
-    if (dateFrom) filters.date_from = dateFrom;
-    if (dateTo) filters.date_to = dateTo;
+  // Обработчики фильтров с useCallback
+  const handleFilterChange = useCallback((key: string, value: string) => {
+    setFilters(prev => ({ ...prev, [key]: value }));
+  }, []);
 
-    if (isModerator) {
-      dispatch(fetchModeratorTrees(filters));
-    } else {
-      // ПЕРЕДАЕМ ФИЛЬТРЫ И ДЛЯ ОБЫЧНОГО ПОЛЬЗОВАТЕЛЯ
-      dispatch(fetchUserTrees(filters));
-    }
-  };
+  const handleClearFilters = useCallback(() => {
+    setFilters({
+      status: '',
+      dateFrom: '',
+      dateTo: '',
+      creator: ''
+    });
+  }, []);
 
   // Фильтрация по создателю на фронтенде ТОЛЬКО для модератора
   const filteredTrees = isModerator 
     ? trees.filter(tree => {
-        if (!creatorFilter) return true;
-        return tree.creator?.toLowerCase().includes(creatorFilter.toLowerCase());
+        if (!filters.creator) return true;
+        return tree.creator?.toLowerCase().includes(filters.creator.toLowerCase());
       })
-    : trees; // Для обычного пользователя вся фильтрация на бэкенде
+    : trees;
 
   // Уникальные создатели для фильтра (только для модератора)
   const uniqueCreators = isModerator 
@@ -99,14 +115,7 @@ const TreePage: React.FC = () => {
     }
   };
 
-  const handleClearFilters = () => {
-    setStatusFilter('');
-    setDateFrom('');
-    setDateTo('');
-    setCreatorFilter('');
-  };
-
-  if (isLoading && pollingCount === 0) {
+  if (isLoading && trees.length === 0) {
     return <LoadingSpinner text="Загрузка заявок..." />;
   }
 
@@ -120,11 +129,11 @@ const TreePage: React.FC = () => {
       <div className="page-content-with-margin">
         <div className="d-flex justify-content-between align-items-center mb-4">
           <h1>{isModerator ? 'Все заявки' : 'Мои заявки на исследование'}</h1>
-          {isModerator && (
-            <Badge bg="info" className="polling-badge">
+          {/*isModerator && (
+             <Badge bg="info" className="polling-badge">
               Auto-update: {pollingCount}
-            </Badge>
-          )}
+            </Badge> 
+          )*/}
         </div>
 
         {/* ФИЛЬТРЫ ДЛЯ ВСЕХ ПОЛЬЗОВАТЕЛЕЙ */}
@@ -136,8 +145,8 @@ const TreePage: React.FC = () => {
                 <Form.Group>
                   <Form.Label><strong>Статус заявки</strong></Form.Label>
                   <Form.Select
-                    value={statusFilter}
-                    onChange={(e) => setStatusFilter(e.target.value)}
+                    value={filters.status}
+                    onChange={(e) => handleFilterChange('status', e.target.value)}
                   >
                     <option value="">Все статусы</option>
                     <option value="черновик">Черновик</option>
@@ -154,8 +163,8 @@ const TreePage: React.FC = () => {
                   <Form.Label><strong>Дата от</strong></Form.Label>
                   <Form.Control
                     type="date"
-                    value={dateFrom}
-                    onChange={(e) => setDateFrom(e.target.value)}
+                    value={filters.dateFrom}
+                    onChange={(e) => handleFilterChange('dateFrom', e.target.value)}
                   />
                 </Form.Group>
               </Col>
@@ -164,8 +173,8 @@ const TreePage: React.FC = () => {
                   <Form.Label><strong>Дата до</strong></Form.Label>
                   <Form.Control
                     type="date"
-                    value={dateTo}
-                    onChange={(e) => setDateTo(e.target.value)}
+                    value={filters.dateTo}
+                    onChange={(e) => handleFilterChange('dateTo', e.target.value)}
                   />
                 </Form.Group>
               </Col>
@@ -176,8 +185,8 @@ const TreePage: React.FC = () => {
                   <Form.Group>
                     <Form.Label><strong>Создатель</strong></Form.Label>
                     <Form.Select
-                      value={creatorFilter}
-                      onChange={(e) => setCreatorFilter(e.target.value)}
+                      value={filters.creator}
+                      onChange={(e) => handleFilterChange('creator', e.target.value)}
                     >
                       <option value="">Все создатели</option>
                       {uniqueCreators.map(creator => (
@@ -191,7 +200,7 @@ const TreePage: React.FC = () => {
             <div className="d-flex justify-content-between align-items-center mt-3">
               <Form.Text className="text-muted">
                 Показано: {filteredTrees.length} заявок
-                {isModerator && ' • Обновляется каждые 3 секунды'}
+                {isModerator && ' • Автообновление каждые 5 секунд'}
               </Form.Text>
               <Button 
                 variant="outline-secondary" 

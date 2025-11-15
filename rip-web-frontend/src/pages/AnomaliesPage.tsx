@@ -15,36 +15,52 @@ import userIcon from '/images/mock/user-icon.jpg';
 const AnomaliesPage: React.FC = () => {
   const [anomalies, setAnomalies] = useState<AnomalyShortResponse[]>([]);
   const [loading, setLoading] = useState(true);
-  const [draftTreeId, setDraftTreeId] = useState<number | null>(null);
+  const [draftTree, setDraftTree] = useState<any>(null);
+  const [treesLoading, setTreesLoading] = useState(false);
   
   const { 
     searchTerm, 
     updateSearchTerm, 
-    saveSearchToHistory
+    saveSearchToHistory 
   } = useSearch();
   
   const { syncCartWithApi, itemCount } = useCart();
   const { isAuthenticated, user } = useAuth();
   const navigate = useNavigate();
 
+  const isModerator = user?.is_moderator === true;
+
   useEffect(() => {
     loadAnomaliesWithCurrentSearch();
-    if (isAuthenticated) {
+    if (isAuthenticated && !isModerator) {
       syncCartWithApi();
-      loadUserDraftTree();
+      loadUserTrees();
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, isModerator]);
 
-  const loadUserDraftTree = async () => {
+  // Обновляем список заявок при изменении корзины
+  useEffect(() => {
+    if (isAuthenticated && !isModerator && itemCount > 0) {
+      loadUserTrees();
+    }
+  }, [itemCount, isAuthenticated, isModerator]);
+
+  const loadUserTrees = async () => {
     try {
-      // Загружаем заявки пользователя чтобы найти черновик
+      setTreesLoading(true);
       const response = await api.api.treesList();
-      const draft = response.data.trees?.find(tree => tree.status === 'черновик');
-      if (draft) {
-        setDraftTreeId(draft.id!);
-      }
+      const trees = response.data.trees || [];
+      
+      const draft = trees.find(tree => tree.status === 'черновик');
+      setDraftTree(draft || null);
+      
+      console.log('📋 Загружены заявки пользователя:', trees);
+      console.log('📝 Черновик:', draft);
     } catch (error) {
-      console.error('Error loading draft tree:', error);
+      console.error('Error loading user trees:', error);
+      setDraftTree(null);
+    } finally {
+      setTreesLoading(false);
     }
   };
 
@@ -88,20 +104,42 @@ const AnomaliesPage: React.FC = () => {
     navigate(`/anomalies/${id}`);
   };
 
-  // ПЕРЕХОД ТОЛЬКО НА ДЕТАЛЬНУЮ СТРАНИЦУ ЗАЯВКИ (ЧЕРНОВИКА)
-  const handleCartClick = () => {
-    if (isAuthenticated) {
-      if (draftTreeId) {
-        // Переходим на детальную страницу существующего черновика
-        navigate(`/trees/${draftTreeId}`);
-      } else {
-        // Если черновика нет, создаем новый и переходим на его детальную страницу
-        navigate('/trees/new'); // или другая логика создания
-      }
-    } else {
+  // ИСПРАВЛЕННАЯ ФУНКЦИЯ - без использования treesCreate
+  const handleCartClick = async () => {
+    if (!isAuthenticated) {
       navigate('/login');
+      return;
+    }
+
+    if (isModerator) {
+      console.log('🚫 Модераторам запрещено создавать заявки');
+      return;
+    }
+
+    if (treesLoading) {
+      console.log('⏳ Заявки еще загружаются...');
+      return;
+    }
+
+    // Если есть черновик - открываем его
+    if (draftTree) {
+      console.log('📂 Открываем существующий черновик:', draftTree.id);
+      navigate(`/trees/${draftTree.id}`);
+    } else {
+      // Если черновика нет, но есть аномалии в корзине - переходим на страницу заявок
+      if (itemCount > 0) {
+        console.log('🛒 Есть аномалии в корзине, переходим к заявкам');
+        navigate('/trees');
+      } else {
+        // Если корзина пустая - тоже переходим на страницу заявок
+        console.log('📝 Переходим к созданию заявки');
+        navigate('/trees');
+      }
     }
   };
+
+  // Иконка активна если есть черновик ИЛИ есть аномалии в корзине
+  const isCartActive = isAuthenticated && !isModerator && !treesLoading && (draftTree || itemCount > 0);
 
   if (loading) {
     return (
@@ -138,19 +176,29 @@ const AnomaliesPage: React.FC = () => {
             </button>
           </div>
           
-          {/* Иконка корзины - переход ТОЛЬКО на детальную страницу заявки */}
+          {/* Иконка корзины */}
           <div className="tree-icon-container">
             <div 
-              className={`tree-icon ${!isAuthenticated ? 'disabled' : ''}`}
+              className={`tree-icon ${!isCartActive ? 'disabled' : ''}`}
               onClick={handleCartClick}
-              title={isAuthenticated ? 
-                (draftTreeId ? "Моя заявка (черновик)" : "Создать новую заявку") 
-                : "Войдите для доступа к заявке"}
+              title={
+                isModerator 
+                  ? "Модераторам запрещено создавать заявки" 
+                  : !isAuthenticated 
+                    ? "Войдите для доступа к заявке" 
+                    : treesLoading 
+                      ? "Загрузка заявок..." 
+                      : draftTree 
+                        ? "Моя заявка (черновик)" 
+                        : itemCount > 0
+                          ? "Перейти к созданию заявки"
+                          : "Создать новую заявку"
+              }
             >
               <img 
                 src={userIcon} 
                 alt="Моя заявка" 
-                className={!isAuthenticated ? "grayscale" : ""}
+                className={!isCartActive ? "grayscale" : ""}
               />
               {isAuthenticated && itemCount > 0 && (
                 <div className="tree-count">

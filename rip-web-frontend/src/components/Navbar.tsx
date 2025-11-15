@@ -13,16 +13,21 @@ const CustomNavbar: React.FC = () => {
   const dispatch = useAppDispatch();
   
   const { user, isAuthenticated } = useAppSelector((state) => state.auth);
-  const { itemCount } = useAppSelector((state) => state.cart);
+  //const { itemCount } = useAppSelector((state) => state.cart);
   const { trees, loadUserTrees } = useTrees();
   const { syncCartWithApi } = useCart();
+
+  // ИСПРАВЛЕНО: Используем is_moderator вместо role
+  const isModerator = user?.is_moderator === true;
 
   useEffect(() => {
     if (isAuthenticated) {
       syncCartWithApi();
-      loadUserTrees();
+      if (!isModerator) {
+        loadUserTrees();
+      }
     }
-  }, [isAuthenticated, syncCartWithApi, loadUserTrees]);
+  }, [isAuthenticated, isModerator, syncCartWithApi, loadUserTrees]);
 
   const draftTree = trees.find(tree => tree.status === 'черновик');
 
@@ -36,7 +41,7 @@ const CustomNavbar: React.FC = () => {
   };
 
   const handleCartClick = () => {
-    if (isAuthenticated) {
+    if (isAuthenticated && !isModerator) {
       if (draftTree) {
         navigate(`/trees/${draftTree.id}`);
       } else {
@@ -66,7 +71,8 @@ const CustomNavbar: React.FC = () => {
           </Nav.Link>
           {isAuthenticated && (
             <Nav.Link as={Link} to="/trees" className="nav-link-custom">
-              Мои заявки
+              {/* ИСПРАВЛЕНО: Для модератора "Все заявки", для обычного пользователя "Мои заявки" */}
+              {isModerator ? 'Все заявки' : 'Мои заявки'}
             </Nav.Link>
           )}
         </Nav>
@@ -78,6 +84,7 @@ const CustomNavbar: React.FC = () => {
               <Dropdown align="end">
                 <Dropdown.Toggle variant="dark" id="user-dropdown" className="user-dropdown-toggle">
                   {user?.login || 'Профиль'}
+                  {isModerator && ' (Модератор)'}
                 </Dropdown.Toggle>
                 <Dropdown.Menu className="navbar-dropdown-menu">
                   <Dropdown.Item as={Link} to="/profile" className="navbar-dropdown-item">
@@ -133,7 +140,8 @@ const CustomNavbar: React.FC = () => {
                     className="navbar-dropdown-item"
                     onClick={() => setShowDropdown(false)}
                   >
-                    Мои заявки
+                    {/* ИСПРАВЛЕНО: Для модератора "Все заявки", для обычного пользователя "Мои заявки" */}
+                    {isModerator ? 'Все заявки' : 'Мои заявки'}
                   </Dropdown.Item>
                   <Dropdown.Item 
                     as={Link}
@@ -142,6 +150,7 @@ const CustomNavbar: React.FC = () => {
                     onClick={() => setShowDropdown(false)}
                   >
                     {user?.login || 'Профиль'}
+                    {isModerator && ' (Модератор)'}
                   </Dropdown.Item>
                   <Dropdown.Divider />
                   <Dropdown.Item 

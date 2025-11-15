@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Form, Button, Card, Alert } from 'react-bootstrap';
-import { Link, useNavigate, useLocation } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../hooks/redux';
 import { loginUser, clearError } from '../slices/authSlice';
 import Breadcrumbs from '../components/Breadcrumbs';
@@ -12,17 +12,17 @@ const LoginPage: React.FC = () => {
   
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
-  const location = useLocation();
   
   const { isLoading, error, isAuthenticated } = useAppSelector((state) => state.auth);
-  
-  const from = location.state?.from?.pathname || '/';
 
+  // После успешной авторизации остаемся на той же странице
+  // или можно перенаправить на главную
   useEffect(() => {
     if (isAuthenticated) {
-      navigate(from, { replace: true });
+      // Просто закрываем страницу логина или перенаправляем на главную
+      navigate('/', { replace: true });
     }
-  }, [isAuthenticated, navigate, from]);
+  }, [isAuthenticated, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -33,6 +33,7 @@ const LoginPage: React.FC = () => {
 
     try {
       await dispatch(loginUser({ login, password })).unwrap();
+      // После успешного входа пользователь будет перенаправлен через useEffect
     } catch (error) {
       // Ошибка обрабатывается в slice
     }

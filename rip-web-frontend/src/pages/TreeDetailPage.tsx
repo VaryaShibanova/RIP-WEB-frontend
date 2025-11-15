@@ -17,7 +17,6 @@ import type { TreeDetailResponse, TreeItemResponse } from '../types';
 import defaultImage from '/images/mock/main-page.png';
 import confirmIcon from '/images/mock/confirm-icon.png';
 import deleteIcon from '/images/mock/delete-icon.png';
-import addIcon from '/images/mock/add-b.png';
 
 const TreeDetailPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -45,7 +44,6 @@ const TreeDetailPage: React.FC = () => {
   const isDraft = treeStatus === 'черновик';
   const isOwner = tree?.creator_id === user?.id;
   const canEdit = isDraft && isOwner;
-  const isModerator = user?.is_moderator;
 
   useEffect(() => {
     if (id) {
@@ -53,7 +51,6 @@ const TreeDetailPage: React.FC = () => {
     }
   }, [dispatch, id]);
 
-  // Обработчики изменений
   const handleDescriptionChange = (value: string) => {
     if (!id) return;
     dispatch(setTreeLocalData({
@@ -71,7 +68,6 @@ const TreeDetailPage: React.FC = () => {
     }));
   };
 
-  // ОБЩАЯ КНОПКА СОХРАНЕНИЯ ДЛЯ ОПИСАНИЯ И ЧИСЛА КОЛЕЦ
   const handleSaveTreeData = async () => {
     if (!id) return;
     
@@ -89,14 +85,12 @@ const TreeDetailPage: React.FC = () => {
     }
   };
 
-  // Для аномальных колец
   const handleEditItem = (item: TreeItemResponse) => {
     setEditingItem(item.anomaly_id!);
     const ringsToEdit = localData.anomalousRings[item.anomaly_id!] || item.anomalous_rings || '';
     setAnomalousRings(ringsToEdit);
   };
 
-  // ОДНА КНОПКА СОХРАНЕНИЯ ДЛЯ АНОМАЛЬНЫХ КОЛЕЦ
   const handleSaveItem = async (anomalyId: number) => {
     if (!id) return;
     
@@ -120,11 +114,6 @@ const TreeDetailPage: React.FC = () => {
     } catch (error) {
       console.error('❌ Error updating item:', error);
     }
-  };
-
-  const handleCancelEdit = () => {
-    setEditingItem(null);
-    setAnomalousRings('');
   };
 
   const handleRemoveItem = async (anomalyId: number) => {
@@ -158,6 +147,36 @@ const TreeDetailPage: React.FC = () => {
       navigate('/trees');
     } catch (error) {
       console.error('Error submitting tree:', error);
+    }
+  };
+
+  // ФУНКЦИЯ ОЧИСТКИ ЗАЯВКИ - ПРОСТАЯ КНОПКА БЕЗ ПОДТВЕРЖДЕНИЙ
+  const handleClearTree = async () => {
+    if (!id || !tree) return;
+    
+    try {
+      // Удаляем все аномалии из заявки
+      for (const item of treeItems) {
+        await dispatch(removeFromTree({
+          treeId: parseInt(id),
+          anomalyId: item.anomaly_id!
+        })).unwrap();
+      }
+      
+      // Очищаем локальные данные
+      dispatch(setTreeLocalData({
+        treeId: parseInt(id),
+        description: '',
+        totalRings: '',
+        anomalousRings: {}
+      }));
+      
+      // Обновляем заявку
+      dispatch(fetchTreeById(parseInt(id)));
+      
+      console.log('✅ Заявка очищена');
+    } catch (error) {
+      console.error('❌ Ошибка очистки заявки:', error);
     }
   };
 
@@ -199,10 +218,11 @@ const TreeDetailPage: React.FC = () => {
   return (
     <div className="tree-detail-page">
       <Container className="tree-detail-container">
+        {/* ХЛЕБНЫЕ КРОШКИ: Главная / Каталог аномалий / Моя заявка */}
         <Breadcrumbs items={[
           { label: 'Главная', path: '/' },
-          { label: isModerator ? 'Все заявки' : 'Мои заявки', path: '/trees' },
-          { label: `Заявка #${tree.id}` }
+          { label: 'Каталог аномалий', path: '/anomalies' },
+          { label: 'Моя заявка' }
         ]} />
 
         <div className="page-content-with-margin">
@@ -322,7 +342,6 @@ const TreeDetailPage: React.FC = () => {
                           className="anomalous-rings-input"
                           autoFocus
                         />
-                        {/* ОДНА КНОПКА СОХРАНЕНИЯ */}
                         <button 
                           onClick={() => handleSaveItem(item.anomaly_id!)}
                           className="btn-save-inline"
@@ -366,16 +385,18 @@ const TreeDetailPage: React.FC = () => {
             )}
           </div>
 
-          {/* Кнопки действий внизу */}
+          {/* Кнопки действий внизу - ОЧИСТКА ЗАЯВКИ */}
           {canEdit && (
             <div className="action-buttons-container">
-              <button 
-                onClick={() => navigate('/anomalies')}
-                className="btn-action-outline"
-              >
-                <img src={addIcon} alt="Добавить" className="button-icon" />
-                Добавить аномалии
-              </button>
+              {treeItems.length > 0 && (
+                <button 
+                  onClick={handleClearTree}
+                  className="btn-action-outline"
+                >
+                  <img src={deleteIcon} alt="Очистить заявку" className="button-icon" />
+                  Очистить заявку
+                </button>
+              )}
             </div>
           )}
         </div>

@@ -13,17 +13,11 @@ interface AnomalyCardProps {
 
 const AnomalyCard: React.FC<AnomalyCardProps> = ({ anomaly, onViewDetails }) => {
   const dispatch = useAppDispatch();
-  const { isAuthenticated, isLoading } = useAppSelector((state) => state.auth);
+  const { isAuthenticated, isLoading, user } = useAppSelector((state) => state.auth);
   const { syncCartWithApi } = useCart();
 
-  // Ждем завершения проверки авторизации
-  const shouldShowAddButton = !isLoading && isAuthenticated;
-
-  console.log('🔐 Auth debug:', { 
-    isAuthenticated, 
-    isLoading,
-    shouldShowAddButton 
-  });
+  // Показывать кнопку только для авторизованных обычных пользователей (не модераторов)
+  const shouldShowAddButton = !isLoading && isAuthenticated && user && !user.is_moderator;
 
   const handleAddToTree = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -58,7 +52,7 @@ const AnomalyCard: React.FC<AnomalyCardProps> = ({ anomaly, onViewDetails }) => 
         />
         <div className="anomaly-header">
           <h3>{anomaly.name}</h3>
-          {/* Показываем кнопку ТОЛЬКО когда проверка авторизации завершена И пользователь авторизован */}
+          {/* Кнопка показывается только для авторизованных обычных пользователей */}
           {shouldShowAddButton && (
             <button 
               className="add-to-tree-btn"
