@@ -225,7 +225,7 @@ const treeSlice = createSlice({
       calculatedYear: number;
       finalYear?: number;
     } }) => {
-      const { treeId, anomalyId, calculatedYear, finalYear } = action.payload;
+      const { anomalyId, calculatedYear, finalYear } = action.payload;
       
       if (state.currentTree && state.currentTree.treeItems) {
         const itemIndex = state.currentTree.treeItems.findIndex(

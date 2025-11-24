@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Card, Form, Button, Alert, Row, Col } from 'react-bootstrap';
+import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../hooks/redux';
 import { getCurrentUser, updateUserProfile, clearError } from '../slices/authSlice';
 import Breadcrumbs from '../components/Breadcrumbs';
@@ -8,19 +9,48 @@ import LoadingSpinner from '../components/LoadingSpinner';
 const ProfilePage: React.FC = () => {
   const [login, setLogin] = useState('');
   const [isEditing, setIsEditing] = useState(false);
+  const [hasLoaded, setHasLoaded] = useState(false);
   
   const dispatch = useAppDispatch();
-  const { user, isLoading, error } = useAppSelector((state) => state.auth);
+  const navigate = useNavigate();
+  const { user, isLoading, error, isAuthenticated } = useAppSelector((state) => state.auth);
 
   useEffect(() => {
-    dispatch(getCurrentUser());
+    console.log('ProfilePage: Loading user data...');
+    const loadUserData = async () => {
+      try {
+        await dispatch(getCurrentUser()).unwrap();
+      } catch (error) {
+        console.error('Failed to load user data:', error);
+      } finally {
+        setHasLoaded(true);
+      }
+    };
+    
+    loadUserData();
   }, [dispatch]);
 
   useEffect(() => {
     if (user) {
+      console.log('ProfilePage: User data loaded', user);
       setLogin(user.login || '');
     }
   }, [user]);
+
+  // Если данные еще загружаются
+  if (isLoading || !hasLoaded) {
+    return <LoadingSpinner text="Загрузка профиля..." />;
+  }
+
+  // Если пользователь не авторизован после загрузки - редирект
+  if (!isAuthenticated || !user) {
+    console.log('ProfilePage: User not authenticated, redirecting to login');
+    useEffect(() => {
+      navigate('/login');
+    }, [navigate]);
+    
+    return <LoadingSpinner text="Перенаправление на страницу входа..." />;
+  }
 
   const handleSave = async () => {
     try {
@@ -36,10 +66,6 @@ const ProfilePage: React.FC = () => {
     setIsEditing(false);
     dispatch(clearError());
   };
-
-  if (isLoading && !user) {
-    return <LoadingSpinner text="Загрузка профиля..." />;
-  }
 
   return (
     <Container className="page-container">

@@ -222,7 +222,7 @@ const TreePage: React.FC = () => {
         <Table striped bordered hover responsive className="bg-dark">
           <thead className="table-dark">
             <tr>
-              <th>ID</th>
+              {/*<th>ID</th>*/}
               <th>Статус</th>
               <th>Количество аномалий</th>
               <th>Финальный год</th>
@@ -234,16 +234,16 @@ const TreePage: React.FC = () => {
           <tbody>
             {filteredTrees.length === 0 ? (
               <tr>
-                <td colSpan={isModerator ? 7 : 5} className="text-center py-4">
+                <td colSpan={isModerator ? 6 : 4} className="text-center py-4">
                   {trees.length === 0 ? 'Заявки не найдены' : 'Заявки не найдены по выбранным фильтрам'}
                 </td>
               </tr>
             ) : (
               filteredTrees.map((tree) => (
                 <tr key={tree.id}>
-                  <td>
+                  {/*<td>
                     <strong>#{tree.id}</strong>
-                  </td>
+                  </td>*/}
                   <td>
                     <Badge bg={getStatusVariant(tree.status || 'черновик')}>
                       {tree.status || 'черновик'}

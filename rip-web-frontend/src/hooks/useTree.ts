@@ -23,12 +23,12 @@ export const useTrees = () => {
 
   const isModerator = user?.is_moderator;
 
-  const loadUserTrees = useCallback(async () => {
+  const loadUserTrees = useCallback(async (filters?: { status?: string; date_from?: string; date_to?: string }) => {
     try {
       if (isModerator) {
-        await dispatch(fetchModeratorTrees()).unwrap();
+        await dispatch(fetchModeratorTrees(filters)).unwrap();
       } else {
-        await dispatch(fetchUserTrees()).unwrap();
+        await dispatch(fetchUserTrees(filters || {})).unwrap();
       }
       return { success: true };
     } catch (error: any) {

@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import type { FC } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route } from 'react-router-dom';
 import { Container } from 'react-bootstrap';
 import CustomNavbar from './components/Navbar';
 import HomePage from './pages/HomePage';
@@ -11,7 +11,7 @@ import RegisterPage from './pages/RegisterPage';
 import ProfilePage from './pages/ProfilePage';
 import TreePage from './pages/TreePage';
 import TreeDetailPage from './pages/TreeDetailPage';
-import ProtectedRoute from './components/ProtectedRoute';
+//import ProtectedRoute from './components/ProtectedRoute';
 import { useAppDispatch } from './hooks/redux';
 import { forceLogout } from './slices/authSlice';
 import 'bootstrap/dist/css/bootstrap.min.css';
@@ -25,7 +25,7 @@ const App: FC = () => {
   const dispatch = useAppDispatch();
 
   useEffect(() => {
-    // ПРИНУДИТЕЛЬНЫЙ СБРОС АВТОРИЗАЦИИ ПРИ КАЖДОЙ ПЕРЕЗАГРУЗКЕ
+    // ПРИНУДИТЕЛЬНЫЙ СБРОС ПРИ КАЖДОЙ ЗАГРУЗКЕ
     dispatch(forceLogout());
   }, [dispatch]);
 
@@ -51,22 +51,10 @@ const App: FC = () => {
             </PublicRoute>
           } />
           
-          {/* Protected routes - только для авторизованных */}
-          <Route path="/profile" element={
-            <ProtectedRoute>
-              <ProfilePage />
-            </ProtectedRoute>
-          } />
-          <Route path="/trees" element={
-            <ProtectedRoute>
-              <TreePage />
-            </ProtectedRoute>
-          } />
-          <Route path="/trees/:id" element={
-            <ProtectedRoute>
-              <TreeDetailPage />
-            </ProtectedRoute>
-          } />
+          {/* Protected routes - УБИРАЕМ ProtectedRoute для теста */}
+          <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/trees" element={<TreePage />} />
+          <Route path="/trees/:id" element={<TreeDetailPage />} />
           
           {/* Fallback route */}
           <Route path="*" element={
