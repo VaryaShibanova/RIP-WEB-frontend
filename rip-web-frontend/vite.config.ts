@@ -15,6 +15,33 @@ export default defineConfig({
       devOptions: {
         enabled: true,
       },
+      workbox: {
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+        runtimeCaching: [
+          {
+            urlPattern: /\/api\/.*/,
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'api-cache',
+              networkTimeoutSeconds: 3,
+              cacheableResponse: {
+                statuses: [0, 200]
+              }
+            }
+          },
+          {
+            urlPattern: /\.(png|jpg|jpeg|svg)$/,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'images-cache',
+              expiration: {
+                maxEntries: 50,
+                maxAgeSeconds: 30 * 24 * 60 * 60 // 30 дней
+              }
+            }
+          }
+        ]
+      },
       manifest: {
         name: "Дендроанализ",
         short_name: "Дендроанализ",
@@ -47,15 +74,13 @@ export default defineConfig({
   base: "/RIP-WEB-frontend/",
   server: {
     https:{
-    key: fs.readFileSync(path.resolve(__dirname, 'cert.key')),
-    cert: fs.readFileSync(path.resolve(__dirname, 'cert.crt')),
-  },
+      key: fs.readFileSync(path.resolve(__dirname, 'cert.key')),
+      cert: fs.readFileSync(path.resolve(__dirname, 'cert.crt')),
+    },
     proxy: {
       "/api": {
         target: "http://localhost:8080",
-        //target: "http://192.168.8.104:8080",
         changeOrigin: true,
-        
       },
     },
     middlewareMode: false,

@@ -27,13 +27,21 @@ if (import.meta.env.DEV) {
 
 const updateSW = registerSW({
   onNeedRefresh() {
-    // Автоматическое обновление когда доступно
-    updateSW();
+    if (confirm('Доступно новое обновление. Перезагрузить страницу?')) {
+      updateSW();
+    }
   },
   onOfflineReady() {
     console.log('App ready for offline use');
   },
 })
+
+// Проверка поддержки Service Worker
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.ready.then((registration) => {
+    console.log('Service Worker готов:', registration);
+  });
+}
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
