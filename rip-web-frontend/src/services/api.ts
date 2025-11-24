@@ -4,8 +4,7 @@ import type {
   AnomaliesListResponse, 
   AnomalyDetailResponse,  
 } from '../types';
-
-const API_BASE_URL = '/api';
+import { dest_api } from '../target_config'; // ИМПОРТИРУЕМ dest_api
 
 // Mock данные с обновленными путями
 const mockAnomalies: Anomaly[] = [
@@ -33,13 +32,17 @@ const mockAnomalies: Anomaly[] = [
 ];
 
 class ApiService {
-  private async fetchWithTimeout<T>(endpoint: string, timeout = 500): Promise<T> {
+  private async fetchWithTimeout<T>(url: string, timeout = 5000): Promise<T> { // УВЕЛИЧИЛ ТАЙМАУТ
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), timeout);
 
     try {
-      const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-        signal: controller.signal
+      const response = await fetch(url, {
+        signal: controller.signal,
+        credentials: 'include', // ДОБАВИЛ КУКИ
+        headers: {
+          'Content-Type': 'application/json',
+        }
       });
       
       clearTimeout(timeoutId);
@@ -52,11 +55,14 @@ class ApiService {
     }
   }
 
-  private async fetchWithFallback<T>(endpoint: string, mockData: T, timeout = 500): Promise<T> {
+  private async fetchWithFallback<T>(endpoint: string, mockData: T, timeout = 5000): Promise<T> {
+    const url = `${dest_api}${endpoint}`; // ИСПОЛЬЗУЕМ dest_api
+    console.log(`Fetching: ${url}`); // ДЛЯ ОТЛАДКИ
+    
     try {
-      return await this.fetchWithTimeout<T>(endpoint, timeout);
+      return await this.fetchWithTimeout<T>(url, timeout);
     } catch (error) {
-      console.warn(`API ${endpoint} failed, using mock data:`, error);
+      console.warn(`API ${url} failed, using mock data:`, error);
       return new Promise((resolve) => {
         setTimeout(() => resolve(mockData), 100);
       });
@@ -71,18 +77,18 @@ class ApiService {
     const queryString = params.toString();
     const endpoint = `/anomalies${queryString ? `?${queryString}` : ''}`;
     
-    return this.fetchWithFallback(endpoint, this.getMockAnomalies(name, year), 500);
+    return this.fetchWithFallback(endpoint, this.getMockAnomalies(name, year), 5000);
   }
 
   async getAnomaly(id: number): Promise<AnomalyDetailResponse> {
-    return this.fetchWithFallback(`/anomalies/${id}`, this.getMockAnomaly(id), 500);
+    return this.fetchWithFallback(`/anomalies/${id}`, this.getMockAnomaly(id), 5000);
   }
 
   async getTreeCart(): Promise<{ user_id: number; item_count: number }> {
     return this.fetchWithFallback(
       '/trees/cart', 
       { user_id: -1, item_count: 0 }, 
-      300
+      5000
     );
   }
 

@@ -1,4 +1,4 @@
-// main.tsx
+// src/main.tsx
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
@@ -38,7 +38,7 @@ const updateSW = registerSW({
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <Provider store={store}>
-      <BrowserRouter basename={import.meta.env.PROD ? '' : '/RIP-WEB-frontend'}>
+      <BrowserRouter> {/* УБРАЛИ basename */}
         <App />
       </BrowserRouter>
     </Provider>
