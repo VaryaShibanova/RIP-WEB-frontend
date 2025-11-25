@@ -61,26 +61,27 @@ def calculate_years(request):
         'message': 'Async calculations started for all tree items',
         'tree_id': data['tree_id'],
         'total_items': len(data['tree_items']),
-        'status': 'processing'
+        'status': 'processing',
+        'estimated_timing': '5-10 seconds per item'
     })
 
 def process_all_calculations_async(tree_id, tree_items):
     """
-    Асинхронная обработка ВСЕХ TreeItem заявки
+    Асинхронная обработка ВСЕХ TreeItem заявки с отправкой ВСЕХ результатов
     """
-    print(f"Processing {len(tree_items)} items for tree {tree_id}")
+    print(f"🔄 Processing {len(tree_items)} items for tree {tree_id}")
     results = []
     
     # Для каждого TreeItem запускаем расчет
     for i, item in enumerate(tree_items):
-        print(f"Processing item {i+1}/{len(tree_items)}: tree_item_id={item['tree_item_id']}")
+        print(f"📝 Processing item {i+1}/{len(tree_items)}: tree_item_id={item['tree_item_id']}")
         
         # ЗАДЕРЖКА 5-10 секунд для КАЖДОГО элемента
         delay_seconds = random.randint(5, 10)
-        print(f"Waiting {delay_seconds} seconds for item {item['tree_item_id']}")
+        print(f"⏳ Waiting {delay_seconds} seconds for item {item['tree_item_id']}")
         time.sleep(delay_seconds)
         
-        # ИСПРАВЛЕНО: УБИРАЕМ СЛУЧАЙНОСТЬ - ВСЕГДА ПЫТАЕМСЯ РАССЧИТАТЬ
+        # РАСЧЕТ ГОДА
         try:
             calculated_year = calculate_year_for_anomaly(
                 item['total_rings'],
@@ -94,18 +95,16 @@ def process_all_calculations_async(tree_id, tree_items):
             status = 'failed'
             print(f"❌ Calculation FAILED for item {item['tree_item_id']}: {e}")
         
+        # НАКАПЛИВАЕМ результат (не отправляем сразу!)
         results.append({
             'tree_item_id': item['tree_item_id'],
             'calculated_year': calculated_year,
             'status': status
         })
-        
-        # Отправляем результат для КАЖДОГО элемента отдельно
-        send_callback_to_go_service(tree_id, item['tree_item_id'], calculated_year, status)
     
-    # Когда ВСЕ расчеты завершены - отправляем финальный callback
-    print(f"All calculations completed for tree {tree_id}")
-    send_final_callback(tree_id, results)
+    # 👇 ОТПРАВЛЯЕМ ВСЕ РЕЗУЛЬТАТЫ ОДНИМ ЗАПРОСОМ
+    print(f"🎯 All calculations completed for tree {tree_id}. Sending ALL results...")
+    send_all_results_to_go_service(tree_id, results)
 
 def calculate_year_for_anomaly(total_rings, anomalous_rings, anomaly_year):
     """Формула расчета calculated_year с улучшенной обработкой ошибок"""
@@ -149,50 +148,40 @@ def calculate_year_for_anomaly(total_rings, anomalous_rings, anomaly_year):
         print(f"   ❌ UNEXPECTED ERROR: {e}")
         raise
 
-def send_callback_to_go_service(tree_id, tree_item_id, calculated_year, status):
-    """Callback для каждого TreeItem"""
+def send_all_results_to_go_service(tree_id, results):
+    """Отправка ВСЕХ результатов одним запросом"""
     callback_url = f"{settings.GO_SERVICE_URL}/api/async/result"
     
     payload = {
         'tree_id': tree_id,
-        'tree_item_id': tree_item_id,
-        'calculated_year': calculated_year,
-        'status': status
-    }
-    
-    headers = {
-        'Authorization': 'Bearer abc12345',  # Простой токен для псевдо-авторизации
-        'Content-Type': 'application/json'
-    }
-    
-    print(f"Sending callback to Go: {payload}")
-    
-    try:
-        response = requests.post(callback_url, json=payload, headers=headers, timeout=10)
-        print(f"Callback response: {response.status_code}")
-    except Exception as e:
-        print(f"Callback error: {e}")
-
-def send_final_callback(tree_id, results):
-    """Финальный callback когда все расчеты завершены"""
-    callback_url = f"{settings.GO_SERVICE_URL}/api/async/final-result"
-    
-    payload = {
-        'tree_id': tree_id,
         'message': 'All calculations completed',
-        'results': results,
+        'results': results,  # 👈 ВЕСЬ массив результатов
+        'total_items': len(results),
         'final_status': 'completed'
     }
     
     headers = {
-        'Authorization': 'Bearer abc12345',  # Простой токен для псевдо-авторизации
+        'Authorization': 'Bearer abc12345',
         'Content-Type': 'application/json'
     }
     
-    print(f"Sending final callback for tree {tree_id}")
+    print(f"📦 Sending ALL results to Go: {len(results)} items")
+    print(f"   Results: {results}")
     
     try:
-        response = requests.post(callback_url, json=payload, headers=headers, timeout=10)
-        print(f"Final callback response: {response.status_code}")
+        response = requests.post(callback_url, json=payload, headers=headers, timeout=30)
+        print(f"✅ All results sent successfully: {response.status_code}")
+        
+        # Логируем ответ от Go
+        if response.status_code == 200:
+            response_data = response.json()
+            print(f"📨 Go response: {response_data}")
+        else:
+            print(f"⚠️  Go returned status: {response.status_code}")
+            
+    except requests.exceptions.Timeout:
+        print("❌ Timeout while sending results to Go")
+    except requests.exceptions.ConnectionError:
+        print("❌ Connection error while sending results to Go")
     except Exception as e:
-        print(f"Final callback error: {e}")
+        print(f"❌ Failed to send all results: {e}")
