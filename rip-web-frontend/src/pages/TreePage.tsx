@@ -77,16 +77,28 @@ const TreePage: React.FC = () => {
   }, []);
 
   // Фильтрация по создателю на фронтенде ТОЛЬКО для модератора
-  const filteredTrees = isModerator 
+  // И ВСЕМ: исключаем заявки со статусом "черновик"
+  const filteredTrees = (isModerator 
     ? trees.filter(tree => {
+        // Исключаем черновики
+        if (tree.status === 'черновик') return false;
+        
+        // Фильтр по создателю
         if (!filters.creator) return true;
         return tree.creator?.toLowerCase().includes(filters.creator.toLowerCase());
       })
-    : trees;
+    : trees.filter(tree => tree.status !== 'черновик') // Обычные пользователи тоже не видят черновики
+  );
 
   // Уникальные создатели для фильтра (только для модератора)
+  // Исключаем черновики при формировании списка создателей
   const uniqueCreators = isModerator 
-    ? Array.from(new Set(trees.map(tree => tree.creator).filter(Boolean))) as string[]
+    ? Array.from(new Set(
+        trees
+          .filter(tree => tree.status !== 'черновик') // Исключаем черновики
+          .map(tree => tree.creator)
+          .filter(Boolean)
+      )) as string[]
     : [];
 
   const handleCompleteTree = async (treeId: number, action: 'complete' | 'reject') => {
@@ -149,7 +161,6 @@ const TreePage: React.FC = () => {
                     onChange={(e) => handleFilterChange('status', e.target.value)}
                   >
                     <option value="">Все статусы</option>
-                    <option value="черновик">Черновик</option>
                     <option value="сформирован">Сформирован</option>
                     <option value="завершён">Завершён</option>
                     <option value="отклонён">Отклонён</option>
@@ -201,6 +212,7 @@ const TreePage: React.FC = () => {
               <Form.Text className="text-muted">
                 Показано: {filteredTrees.length} заявок
                 {isModerator && ' • Автообновление каждые 5 секунд'}
+                {' • Черновики скрыты'}
               </Form.Text>
               <Button 
                 variant="outline-secondary" 
