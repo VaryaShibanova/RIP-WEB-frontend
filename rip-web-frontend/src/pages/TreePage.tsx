@@ -7,11 +7,37 @@ import Breadcrumbs from '../components/Breadcrumbs';
 import LoadingSpinner from '../components/LoadingSpinner';
 
 const TreePage: React.FC = () => {
-  const [filters, setFilters] = useState({
+  // Функция для получения текущей даты в формате YYYY-MM-DD
+  const getCurrentDate = () => {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  // Функция для получения завтрашней даты
+  const getTomorrowDate = () => {
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const year = tomorrow.getFullYear();
+    const month = String(tomorrow.getMonth() + 1).padStart(2, '0');
+    const day = String(tomorrow.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+  
+  // Фронтенд хранит "сегодня" в обоих полях, а на бэкенд отправляем "сегодня" и "завтра"
+  const [displayFilters, setDisplayFilters] = useState({
     status: '',
-    dateFrom: '',
-    dateTo: '',
+    dateFrom: getCurrentDate(), // Показываем "сегодня"
+    dateTo: getCurrentDate(),   // Показываем "сегодня"
     creator: ''
+  });
+  
+  // Реальные фильтры для отправки на сервер
+  const [realFilters, setRealFilters] = useState({
+    dateFrom: getCurrentDate(),
+    dateTo: getTomorrowDate()   // На сервер отправляем "завтра"
   });
   
   const dispatch = useAppDispatch();
@@ -26,33 +52,32 @@ const TreePage: React.FC = () => {
   const loadTrees = useCallback(() => {
     const apiFilters: any = {};
     
-    if (filters.status) apiFilters.status = filters.status;
-    if (filters.dateFrom) apiFilters.date_from = filters.dateFrom;
-    if (filters.dateTo) apiFilters.date_to = filters.dateTo;
+    if (displayFilters.status) apiFilters.status = displayFilters.status;
+    if (realFilters.dateFrom) apiFilters.date_from = realFilters.dateFrom;
+    if (realFilters.dateTo) apiFilters.date_to = realFilters.dateTo;
+    
+    if (displayFilters.creator) apiFilters.creator = displayFilters.creator;
 
     if (isModerator) {
       dispatch(fetchModeratorTrees(apiFilters));
     } else {
       dispatch(fetchUserTrees(apiFilters));
     }
-  }, [filters, isModerator, dispatch]);
+  }, [displayFilters, realFilters, isModerator, dispatch]);
 
   // Short polling только для модератора
   useEffect(() => {
     loadTrees(); // Первоначальная загрузка
     
     if (isModerator) {
-      // Очищаем предыдущий интервал
       if (pollingRef.current) {
         clearInterval(pollingRef.current);
       }
       
-      // Запускаем новый интервал
       pollingRef.current = window.setInterval(() => {
         loadTrees();
-      }, 5000); // 5 секунд
+      }, 5000);
 
-      // Очистка при размонтировании
       return () => {
         if (pollingRef.current) {
           clearInterval(pollingRef.current);
@@ -60,42 +85,77 @@ const TreePage: React.FC = () => {
         }
       };
     }
-  }, [loadTrees, isModerator]); // Зависимости: loadTrees и isModerator
+  }, [loadTrees, isModerator]);
 
-  // Обработчики фильтров с useCallback
+  // Обработчики фильтров
   const handleFilterChange = useCallback((key: string, value: string) => {
-    setFilters(prev => ({ ...prev, [key]: value }));
+    setDisplayFilters(prev => ({ ...prev, [key]: value }));
+    
+    // Обновляем реальные фильтры для отправки на сервер
+    if (key === 'dateFrom') {
+      setRealFilters(prev => ({ ...prev, dateFrom: value }));
+    }
+    
+    if (key === 'dateTo') {
+      // Если пользователь выбрал дату "до", добавляем 1 день для сервера
+      const date = new Date(value);
+      date.setDate(date.getDate() + 1);
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const nextDay = `${year}-${month}-${day}`;
+      setRealFilters(prev => ({ ...prev, dateTo: nextDay }));
+    }
   }, []);
 
   const handleClearFilters = useCallback(() => {
-    setFilters({
+    setDisplayFilters({
       status: '',
       dateFrom: '',
       dateTo: '',
       creator: ''
     });
+    setRealFilters({
+      dateFrom: '',
+      dateTo: ''
+    });
+  }, []);
+
+  // Функция для установки фильтра на сегодня
+  const handleSetToday = useCallback(() => {
+    const today = getCurrentDate();
+    const tomorrow = getTomorrowDate();
+    
+    setDisplayFilters(prev => ({
+      ...prev,
+      dateFrom: today,
+      dateTo: today
+    }));
+    setRealFilters({
+      dateFrom: today,
+      dateTo: tomorrow
+    });
+  }, []);
+
+  // Инициализация при первом рендере
+  useEffect(() => {
+    handleSetToday();
   }, []);
 
   // Фильтрация по создателю на фронтенде ТОЛЬКО для модератора
-  // И ВСЕМ: исключаем заявки со статусом "черновик"
   const filteredTrees = (isModerator 
     ? trees.filter(tree => {
-        // Исключаем черновики
         if (tree.status === 'черновик') return false;
-        
-        // Фильтр по создателю
-        if (!filters.creator) return true;
-        return tree.creator?.toLowerCase().includes(filters.creator.toLowerCase());
+        if (!displayFilters.creator) return true;
+        return tree.creator?.toLowerCase().includes(displayFilters.creator.toLowerCase());
       })
-    : trees.filter(tree => tree.status !== 'черновик') // Обычные пользователи тоже не видят черновики
+    : trees.filter(tree => tree.status !== 'черновик')
   );
 
-  // Уникальные создатели для фильтра (только для модератора)
-  // Исключаем черновики при формировании списка создателей
   const uniqueCreators = isModerator 
     ? Array.from(new Set(
         trees
-          .filter(tree => tree.status !== 'черновик') // Исключаем черновики
+          .filter(tree => tree.status !== 'черновик')
           .map(tree => tree.creator)
           .filter(Boolean)
       )) as string[]
@@ -141,11 +201,6 @@ const TreePage: React.FC = () => {
       <div className="page-content-with-margin">
         <div className="d-flex justify-content-between align-items-center mb-4">
           <h1>{isModerator ? 'Все заявки' : 'Мои заявки на исследование'}</h1>
-          {/*isModerator && (
-             <Badge bg="info" className="polling-badge">
-              Auto-update: {pollingCount}
-            </Badge> 
-          )*/}
         </div>
 
         {/* ФИЛЬТРЫ ДЛЯ ВСЕХ ПОЛЬЗОВАТЕЛЕЙ */}
@@ -157,7 +212,7 @@ const TreePage: React.FC = () => {
                 <Form.Group>
                   <Form.Label><strong>Статус заявки</strong></Form.Label>
                   <Form.Select
-                    value={filters.status}
+                    value={displayFilters.status}
                     onChange={(e) => handleFilterChange('status', e.target.value)}
                   >
                     <option value="">Все статусы</option>
@@ -174,7 +229,7 @@ const TreePage: React.FC = () => {
                   <Form.Label><strong>Дата от</strong></Form.Label>
                   <Form.Control
                     type="date"
-                    value={filters.dateFrom}
+                    value={displayFilters.dateFrom}
                     onChange={(e) => handleFilterChange('dateFrom', e.target.value)}
                   />
                 </Form.Group>
@@ -184,7 +239,7 @@ const TreePage: React.FC = () => {
                   <Form.Label><strong>Дата до</strong></Form.Label>
                   <Form.Control
                     type="date"
-                    value={filters.dateTo}
+                    value={displayFilters.dateTo}
                     onChange={(e) => handleFilterChange('dateTo', e.target.value)}
                   />
                 </Form.Group>
@@ -196,7 +251,7 @@ const TreePage: React.FC = () => {
                   <Form.Group>
                     <Form.Label><strong>Создатель</strong></Form.Label>
                     <Form.Select
-                      value={filters.creator}
+                      value={displayFilters.creator}
                       onChange={(e) => handleFilterChange('creator', e.target.value)}
                     >
                       <option value="">Все создатели</option>
@@ -213,14 +268,26 @@ const TreePage: React.FC = () => {
                 Показано: {filteredTrees.length} заявок
                 {isModerator && ' • Автообновление каждые 5 секунд'}
                 {' • Черновики скрыты'}
+                {displayFilters.dateFrom && displayFilters.dateTo && 
+                 displayFilters.dateFrom === displayFilters.dateTo && 
+                 ` • Фильтр: за ${displayFilters.dateFrom}`}
               </Form.Text>
-              <Button 
-                variant="outline-secondary" 
-                size="sm" 
-                onClick={handleClearFilters}
-              >
-                Очистить фильтры
-              </Button>
+              <div className="d-flex gap-2">
+                <Button 
+                  variant="outline-primary" 
+                  size="sm" 
+                  onClick={handleSetToday}
+                >
+                  Показать сегодня
+                </Button>
+                <Button 
+                  variant="outline-secondary" 
+                  size="sm" 
+                  onClick={handleClearFilters}
+                >
+                  Очистить фильтры
+                </Button>
+              </div>
             </div>
           </Card.Body>
         </Card>
@@ -234,7 +301,6 @@ const TreePage: React.FC = () => {
         <Table striped bordered hover responsive className="bg-dark">
           <thead className="table-dark">
             <tr>
-              {/*<th>ID</th>*/}
               <th>Статус</th>
               <th>Количество аномалий</th>
               <th>Финальный год</th>
@@ -253,9 +319,6 @@ const TreePage: React.FC = () => {
             ) : (
               filteredTrees.map((tree) => (
                 <tr key={tree.id}>
-                  {/*<td>
-                    <strong>#{tree.id}</strong>
-                  </td>*/}
                   <td>
                     <Badge bg={getStatusVariant(tree.status || 'черновик')}>
                       {tree.status || 'черновик'}
