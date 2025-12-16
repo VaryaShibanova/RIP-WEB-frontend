@@ -58,7 +58,7 @@ const RegisterPage: React.FC = () => {
 
       <div className="d-flex justify-content-center">
         <Card style={{ width: '400px', background: 'rgba(255, 255, 255, 0.05)' }} className="p-4">
-          <h2 className="text-center mb-4">Регистрация</h2>
+          <h2 className="text-center mb-4 text-white">Регистрация</h2>
           
           {error && <Alert variant="danger">{error}</Alert>}
 

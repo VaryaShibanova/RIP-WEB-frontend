@@ -2472,3 +2472,531 @@ body {
   transition: transform 0.2s;
 }
 
+/* Сделаем заголовки и метки белыми, но поля ввода оставим темными */
+.card .form-label,
+.card .text-muted,
+.card h1,
+.card h2,
+.card h3,
+.card h4,
+.card h5,
+.card h6 {
+    color: white !important;
+}
+
+/* Поля ввода оставляем с темным текстом */
+.card .form-control {
+    color: #060F1E !important; /* Темный цвет текста */
+    background: rgba(255, 255, 255, 0.9) !important;
+}
+
+.card .form-control::placeholder {
+    color: rgba(0, 0, 0, 0.6) !important; /* Темный плейсхолдер */
+}
+
+/* Для неактивных полей */
+.card .form-control:disabled {
+    color: rgba(0, 0, 0, 0.5) !important;
+    background: rgba(255, 255, 255, 0.7) !important;
+}
+
+/* Ссылки в карточках */
+.card a {
+    color: #4ECDC4 !important;
+}
+
+/* Увеличим отступ после хлебных крошек */
+.breadcrumbs-container {
+    width: 100%;
+    max-width: 1280px;
+    margin: 0 auto 40px;
+}
+
+.breadcrumbs-spacing {
+    margin-bottom: 50px !important;
+}
+
+@media (max-width: 768px) {
+    .breadcrumbs-spacing {
+        margin-bottom: 40px !important;
+    }
+}
+
+/* Отступ от хлебных крошек для форм */
+.breadcrumbs-form-spacing {
+    margin-bottom: 40px;
+}
+
+/* СТИЛИ ДЛЯ СТРАНИЦЫ ЗАЯВОК (TreePage) */
+
+.tree-page-title {
+  color: white !important;
+  font-size: 32px;
+  font-weight: 400;
+  text-transform: uppercase;
+  line-height: 1.2;
+  letter-spacing: 1.5px;
+  margin-bottom: 10px;
+}
+
+/* Карточки фильтров */
+.tree-filters-card {
+  background: rgba(15, 25, 40, 0.95) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  border-radius: 12px !important;
+  margin-bottom: 30px !important;
+  width: 100%;
+  max-width: 1126px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.tree-filters-header {
+  background: rgba(30, 45, 70, 0.9) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+  color: #E0E0E0 !important;
+  font-size: 1.1rem !important;
+  font-weight: 600 !important;
+  padding: 16px 25px !important;
+  border-radius: 12px 12px 0 0 !important;
+}
+
+.tree-filters-title {
+  font-weight: 700;
+}
+
+.tree-filter-label {
+  color: #B0B0B0 !important;
+  font-weight: 500 !important;
+  font-size: 0.9rem !important;
+  margin-bottom: 6px !important;
+  display: block;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.tree-filter-select,
+.tree-filter-input {
+  background: rgba(30, 45, 70, 0.8) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  color: white !important;
+  border-radius: 8px !important;
+  padding: 10px 14px !important;
+  font-size: 0.95rem !important;
+  transition: all 0.2s ease !important;
+  height: 44px !important;
+}
+
+.tree-filter-select:focus,
+.tree-filter-input:focus {
+  background: rgba(40, 55, 80, 0.9) !important;
+  border-color: #4A90E2 !important;
+  box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.2) !important;
+  color: white !important;
+  outline: none !important;
+}
+
+.tree-filter-select option {
+  background: #1E2D46 !important;
+  color: white !important;
+  padding: 8px !important;
+}
+
+.tree-filters-footer {
+  border-top: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+.tree-filter-info {
+  color: #909090 !important;
+  font-size: 0.9rem !important;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.tree-filter-count {
+  color: #B0B0B0 !important;
+  font-weight: 500;
+}
+
+.tree-filter-count strong {
+  color: #4A90E2;
+  font-weight: 700;
+  font-size: 1.1em;
+}
+
+.tree-filter-button {
+  padding: 8px 16px !important;
+  border-radius: 8px !important;
+  font-weight: 500 !important;
+  font-size: 0.9rem !important;
+  transition: all 0.2s ease !important;
+  border-width: 1px !important;
+  min-width: 140px;
+}
+
+.tree-error-alert {
+  background: rgba(220, 53, 69, 0.1) !important;
+  border: 1px solid rgba(220, 53, 69, 0.2) !important;
+  color: #f8d7da !important;
+  border-radius: 8px !important;
+  padding: 15px 20px !important;
+  margin-bottom: 25px !important;
+  font-weight: 500;
+  max-width: 1126px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Контейнер для карточек */
+.tree-cards-container {
+  margin-top: 25px;
+  width: 100%;
+  max-width: 1126px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.tree-no-results {
+  text-align: center;
+  padding: 60px 20px;
+  background: rgba(30, 45, 70, 0.6);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  width: 100%;
+}
+
+.tree-no-results-title {
+  color: #B0B0B0;
+  font-size: 1.5rem;
+  font-weight: 500;
+  margin-bottom: 12px;
+}
+
+.tree-no-results-text {
+  color: #909090;
+  font-size: 1rem;
+  max-width: 400px;
+  margin: 0 auto;
+  line-height: 1.5;
+}
+
+/* Вертикальные карточки */
+.tree-cards-vertical {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  width: 100%;
+}
+
+/* Карточка заявки */
+.tree-request-card {
+  background: rgba(15, 25, 40, 0.95) !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 12px !important;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  overflow: hidden;
+  position: relative;
+  width: 100%;
+  min-height: 120px;
+}
+
+.tree-request-card:hover {
+  border-color: rgba(74, 144, 226, 0.3) !important;
+  background: rgba(20, 30, 45, 0.98) !important;
+  transform: translateY(-2px);
+}
+
+.tree-card-body {
+  padding: 20px !important;
+  display: flex;
+  align-items: center;
+}
+
+/* ГОРИЗОНТАЛЬНАЯ СТРОКА В КАРТОЧКЕ */
+.tree-card-horizontal-row {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  gap: 30px;
+  flex-wrap: nowrap;
+}
+
+.tree-card-column {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+/* Колонка с действиями */
+.tree-actions-column {
+  min-width: 160px;
+  flex: 0 0 auto;
+}
+
+.tree-card-label {
+  color: #909090;
+  font-size: 0.8rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  white-space: nowrap;
+  opacity: 0.8;
+  margin-bottom: 4px;
+}
+
+/* Стили для значений */
+.tree-status-badge {
+  font-size: 0.9rem !important;
+  font-weight: 600 !important;
+  padding: 6px 14px !important;
+  border-radius: 6px !important;
+  color: white !important;
+  text-align: center;
+  display: inline-block;
+  min-width: 100px;
+}
+
+.tree-card-value {
+  color: white;
+  font-size: 1.1rem;
+  font-weight: 600;
+  text-align: left;
+  word-break: break-word;
+}
+
+.tree-anomalies-count {
+  color: #4A90E2 !important;
+  font-size: 1.2rem !important;
+  font-weight: 700 !important;
+}
+
+.tree-final-year {
+  color: #4A90E2 !important;
+  font-size: 1.1rem !important;
+  font-weight: 700 !important;
+}
+
+.tree-creator,
+.tree-moderator {
+  color: #E0E0E0 !important;
+  font-weight: 500 !important;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  word-break: break-word;
+  line-height: 1.2;
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+}
+
+/* Вертикальное расположение кнопок */
+.tree-card-actions-vertical {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+  max-width: 150px;
+}
+
+.tree-complete-button,
+.tree-reject-button {
+  padding: 8px 12px !important;
+  border-radius: 6px !important;
+  font-weight: 600 !important;
+  font-size: 0.85rem !important;
+  transition: all 0.2s ease !important;
+  border-width: 1px !important;
+  width: 100%;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.tree-complete-button {
+  background-color: #4A90E2 !important;
+  border-color: #4A90E2 !important;
+  color: white !important;
+}
+
+.tree-complete-button:hover {
+  background-color: #3A80D2 !important;
+  border-color: #3A80D2 !important;
+  transform: translateY(-1px);
+}
+
+.tree-reject-button {
+  background-color: transparent !important;
+  border-color: #6C757D !important;
+  color: #B0B0B0 !important;
+}
+
+.tree-reject-button:hover {
+  background-color: rgba(108, 117, 125, 0.1) !important;
+  border-color: #909090 !important;
+  color: #E0E0E0 !important;
+  transform: translateY(-1px);
+}
+
+/* Адаптивность */
+@media (max-width: 1200px) {
+  .tree-filters-card,
+  .tree-cards-container {
+    max-width: 100%;
+  }
+  
+  .tree-card-horizontal-row {
+    gap: 25px;
+  }
+}
+
+@media (max-width: 991px) {
+  .tree-filters-card .row {
+    gap: 20px;
+  }
+  
+  .tree-card-horizontal-row {
+    gap: 20px;
+  }
+  
+  .tree-card-column {
+    min-width: 120px;
+  }
+  
+  .tree-actions-column {
+    min-width: 140px;
+  }
+}
+
+@media (max-width: 768px) {
+  .tree-filters-card .row {
+    flex-direction: column;
+    gap: 15px;
+  }
+  
+  .tree-filter-buttons {
+    flex-direction: column;
+    width: 100%;
+  }
+  
+  .tree-filter-button {
+    width: 100%;
+    min-width: 100%;
+  }
+  
+  .tree-card-horizontal-row {
+    flex-direction: column;
+    gap: 20px;
+    align-items: flex-start;
+  }
+  
+  .tree-card-column {
+    width: 100%;
+    min-width: 100%;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+  }
+  
+  .tree-card-label {
+    text-align: left;
+    min-width: 140px;
+    margin-bottom: 0;
+  }
+  
+  .tree-status-badge {
+    min-width: 120px;
+    text-align: center;
+  }
+  
+  .tree-card-value {
+    text-align: right;
+    flex: 1;
+  }
+  
+  .tree-actions-column {
+    width: 100%;
+  }
+  
+  .tree-card-actions-vertical {
+    flex-direction: row;
+    max-width: 100%;
+    justify-content: flex-end;
+    gap: 10px;
+  }
+  
+  .tree-complete-button,
+  .tree-reject-button {
+    width: auto;
+    min-width: 120px;
+  }
+}
+
+@media (max-width: 480px) {
+  .tree-page-title {
+    font-size: 26px;
+  }
+  
+  .tree-filters-card {
+    margin-bottom: 20px;
+  }
+  
+  .tree-filter-info {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  
+  .tree-card-body {
+    padding: 15px !important;
+  }
+  
+  .tree-status-badge {
+    min-width: 100px;
+    font-size: 0.85rem !important;
+    padding: 5px 12px !important;
+  }
+  
+  .tree-card-actions-vertical {
+    flex-direction: column;
+    gap: 6px;
+  }
+  
+  .tree-complete-button,
+  .tree-reject-button {
+    width: 100%;
+    min-width: 100%;
+    padding: 6px 12px !important;
+  }
+}
+
+/* Анимации */
+@keyframes cardAppear {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.tree-request-card {
+  animation: cardAppear 0.3s ease-out;
+  animation-fill-mode: both;
+}
+
+.tree-cards-vertical .tree-request-card:nth-child(1) { animation-delay: 0.1s; }
+.tree-cards-vertical .tree-request-card:nth-child(2) { animation-delay: 0.15s; }
+.tree-cards-vertical .tree-request-card:nth-child(3) { animation-delay: 0.2s; }
+.tree-cards-vertical .tree-request-card:nth-child(4) { animation-delay: 0.25s; }
+.tree-cards-vertical .tree-request-card:nth-child(5) { animation-delay: 0.3s; }
+.tree-cards-vertical .tree-request-card:nth-child(n+6) { animation-delay: 0.35s; }

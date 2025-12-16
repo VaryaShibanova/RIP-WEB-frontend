@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { Container, Table, Button, Form, Row, Col, Card, Badge } from 'react-bootstrap';
+import { Container, Button, Form, Row, Col, Card } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../hooks/redux';
 import { fetchUserTrees, fetchModeratorTrees, completeTree } from '../slices/treeSlice';
@@ -7,7 +7,6 @@ import Breadcrumbs from '../components/Breadcrumbs';
 import LoadingSpinner from '../components/LoadingSpinner';
 
 const TreePage: React.FC = () => {
-  // Функция для получения текущей даты в формате YYYY-MM-DD
   const getCurrentDate = () => {
     const now = new Date();
     const year = now.getFullYear();
@@ -16,7 +15,6 @@ const TreePage: React.FC = () => {
     return `${year}-${month}-${day}`;
   };
 
-  // Функция для получения завтрашней даты
   const getTomorrowDate = () => {
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
@@ -26,18 +24,16 @@ const TreePage: React.FC = () => {
     return `${year}-${month}-${day}`;
   };
   
-  // Фронтенд хранит "сегодня" в обоих полях, а на бэкенд отправляем "сегодня" и "завтра"
   const [displayFilters, setDisplayFilters] = useState({
     status: '',
-    dateFrom: getCurrentDate(), // Показываем "сегодня"
-    dateTo: getCurrentDate(),   // Показываем "сегодня"
+    dateFrom: getCurrentDate(),
+    dateTo: getCurrentDate(),
     creator: ''
   });
   
-  // Реальные фильтры для отправки на сервер
   const [realFilters, setRealFilters] = useState({
     dateFrom: getCurrentDate(),
-    dateTo: getTomorrowDate()   // На сервер отправляем "завтра"
+    dateTo: getTomorrowDate()
   });
   
   const dispatch = useAppDispatch();
@@ -48,7 +44,6 @@ const TreePage: React.FC = () => {
   const isModerator = user?.is_moderator;
   const pollingRef = useRef<number | null>(null);
 
-  // useCallback чтобы функция не пересоздавалась при каждом рендере
   const loadTrees = useCallback(() => {
     const apiFilters: any = {};
     
@@ -65,9 +60,8 @@ const TreePage: React.FC = () => {
     }
   }, [displayFilters, realFilters, isModerator, dispatch]);
 
-  // Short polling только для модератора
   useEffect(() => {
-    loadTrees(); // Первоначальная загрузка
+    loadTrees();
     
     if (isModerator) {
       if (pollingRef.current) {
@@ -87,17 +81,14 @@ const TreePage: React.FC = () => {
     }
   }, [loadTrees, isModerator]);
 
-  // Обработчики фильтров
   const handleFilterChange = useCallback((key: string, value: string) => {
     setDisplayFilters(prev => ({ ...prev, [key]: value }));
     
-    // Обновляем реальные фильтры для отправки на сервер
     if (key === 'dateFrom') {
       setRealFilters(prev => ({ ...prev, dateFrom: value }));
     }
     
     if (key === 'dateTo') {
-      // Если пользователь выбрал дату "до", добавляем 1 день для сервера
       const date = new Date(value);
       date.setDate(date.getDate() + 1);
       const year = date.getFullYear();
@@ -121,7 +112,6 @@ const TreePage: React.FC = () => {
     });
   }, []);
 
-  // Функция для установки фильтра на сегодня
   const handleSetToday = useCallback(() => {
     const today = getCurrentDate();
     const tomorrow = getTomorrowDate();
@@ -137,12 +127,10 @@ const TreePage: React.FC = () => {
     });
   }, []);
 
-  // Инициализация при первом рендере
   useEffect(() => {
     handleSetToday();
   }, []);
 
-  // Фильтрация по создателю на фронтенде ТОЛЬКО для модератора
   const filteredTrees = (isModerator 
     ? trees.filter(tree => {
         if (tree.status === 'черновик') return false;
@@ -177,13 +165,12 @@ const TreePage: React.FC = () => {
     navigate(`/trees/${treeId}`);
   };
 
-  const getStatusVariant = (status: string) => {
+  const getStatusColor = (status: string) => {
     switch (status) {
-      case 'черновик': return 'secondary';
-      case 'сформирован': return 'warning';
-      case 'завершён': return 'success';
-      case 'отклонён': return 'danger';
-      default: return 'secondary';
+      case 'сформирован': return '#FFC107'; // желтый
+      case 'завершён': return '#28A745'; // зеленый
+      case 'отклонён': return '#DC3545'; // красный
+      default: return '#6C757D'; // серый
     }
   };
 
@@ -200,20 +187,23 @@ const TreePage: React.FC = () => {
 
       <div className="page-content-with-margin">
         <div className="d-flex justify-content-between align-items-center mb-4">
-          <h1>{isModerator ? 'Все заявки' : 'Мои заявки на исследование'}</h1>
+          <h1 className="tree-page-title">{isModerator ? 'Все заявки' : 'Мои заявки на исследование'}</h1>
         </div>
 
-        {/* ФИЛЬТРЫ ДЛЯ ВСЕХ ПОЛЬЗОВАТЕЛЕЙ */}
-        <Card className="mb-4">
+        {/* ФИЛЬТРЫ */}
+        <Card className="mb-4 tree-filters-card">
+          <Card.Header className="tree-filters-header">
+            <span className="tree-filters-title">Фильтры заявок</span>
+          </Card.Header>
           <Card.Body>
-            <Row>
-              {/* СТАТУС - ДЛЯ ВСЕХ */}
+            <Row className="g-3">
               <Col md={isModerator ? 3 : 4}>
                 <Form.Group>
-                  <Form.Label><strong>Статус заявки</strong></Form.Label>
+                  <Form.Label className="tree-filter-label">Статус заявки</Form.Label>
                   <Form.Select
                     value={displayFilters.status}
                     onChange={(e) => handleFilterChange('status', e.target.value)}
+                    className="tree-filter-select"
                   >
                     <option value="">Все статусы</option>
                     <option value="сформирован">Сформирован</option>
@@ -223,36 +213,37 @@ const TreePage: React.FC = () => {
                 </Form.Group>
               </Col>
 
-              {/* ДАТЫ - ДЛЯ ВСЕХ ПОЛЬЗОВАТЕЛЕЙ */}
               <Col md={isModerator ? 3 : 4}>
                 <Form.Group>
-                  <Form.Label><strong>Дата от</strong></Form.Label>
+                  <Form.Label className="tree-filter-label">Дата от</Form.Label>
                   <Form.Control
                     type="date"
                     value={displayFilters.dateFrom}
                     onChange={(e) => handleFilterChange('dateFrom', e.target.value)}
+                    className="tree-filter-input"
                   />
                 </Form.Group>
               </Col>
               <Col md={isModerator ? 3 : 4}>
                 <Form.Group>
-                  <Form.Label><strong>Дата до</strong></Form.Label>
+                  <Form.Label className="tree-filter-label">Дата до</Form.Label>
                   <Form.Control
                     type="date"
                     value={displayFilters.dateTo}
                     onChange={(e) => handleFilterChange('dateTo', e.target.value)}
+                    className="tree-filter-input"
                   />
                 </Form.Group>
               </Col>
 
-              {/* СОЗДАТЕЛЬ - ТОЛЬКО ДЛЯ МОДЕРАТОРА */}
               {isModerator && (
                 <Col md={3}>
                   <Form.Group>
-                    <Form.Label><strong>Создатель</strong></Form.Label>
+                    <Form.Label className="tree-filter-label">Создатель</Form.Label>
                     <Form.Select
                       value={displayFilters.creator}
                       onChange={(e) => handleFilterChange('creator', e.target.value)}
+                      className="tree-filter-select"
                     >
                       <option value="">Все создатели</option>
                       {uniqueCreators.map(creator => (
@@ -263,20 +254,16 @@ const TreePage: React.FC = () => {
                 </Col>
               )}
             </Row>
-            <div className="d-flex justify-content-between align-items-center mt-3">
-              <Form.Text className="text-muted">
-                Показано: {filteredTrees.length} заявок
-                {isModerator && ' • Автообновление каждые 5 секунд'}
-                {' • Черновики скрыты'}
-                {displayFilters.dateFrom && displayFilters.dateTo && 
-                 displayFilters.dateFrom === displayFilters.dateTo && 
-                 ` • Фильтр: за ${displayFilters.dateFrom}`}
-              </Form.Text>
+            <div className="d-flex justify-content-between align-items-center mt-4 pt-3 tree-filters-footer">
+              <div className="tree-filter-info">
+                <span className="tree-filter-count">Показано: <strong>{filteredTrees.length}</strong> заявок</span>
+              </div>
               <div className="d-flex gap-2">
                 <Button 
                   variant="outline-primary" 
                   size="sm" 
                   onClick={handleSetToday}
+                  className="tree-filter-button"
                 >
                   Показать сегодня
                 </Button>
@@ -284,6 +271,7 @@ const TreePage: React.FC = () => {
                   variant="outline-secondary" 
                   size="sm" 
                   onClick={handleClearFilters}
+                  className="tree-filter-button"
                 >
                   Очистить фильтры
                 </Button>
@@ -293,95 +281,117 @@ const TreePage: React.FC = () => {
         </Card>
 
         {error && (
-          <div className="alert alert-danger" role="alert">
+          <div className="alert alert-danger tree-error-alert" role="alert">
             {error}
           </div>
         )}
 
-        <Table striped bordered hover responsive className="bg-dark">
-          <thead className="table-dark">
-            <tr>
-              <th>Статус</th>
-              <th>Количество аномалий</th>
-              <th>Финальный год</th>
-              {isModerator && <th>Создатель</th>}
-              {isModerator && <th>Модератор</th>}
-              <th>Действия</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredTrees.length === 0 ? (
-              <tr>
-                <td colSpan={isModerator ? 6 : 4} className="text-center py-4">
-                  {trees.length === 0 ? 'Заявки не найдены' : 'Заявки не найдены по выбранным фильтрам'}
-                </td>
-              </tr>
-            ) : (
-              filteredTrees.map((tree) => (
-                <tr key={tree.id}>
-                  <td>
-                    <Badge bg={getStatusVariant(tree.status || 'черновик')}>
-                      {tree.status || 'черновик'}
-                    </Badge>
-                  </td>
-                  <td>
-                    <span className="anomalies-count">
-                      {tree.amount_of_anomalies || 0}
-                    </span>
-                  </td>
-                  <td>
-                    <span className="final-year">
-                      {tree.final_year ? `${tree.final_year} г.` : 'Не рассчитан'}
-                    </span>
-                  </td>
-                  {isModerator && (
-                    <>
-                      <td>
-                        <span className="creator">
-                          {tree.creator || 'Неизвестно'}
-                        </span>
-                      </td>
-                      <td>
-                        <span className="moderator">
-                          {tree.moderator || 'Не назначен'}
-                        </span>
-                      </td>
-                    </>
-                  )}
-                  <td>
-                    <div className="d-flex gap-2 flex-wrap">
-                      <Button
-                        onClick={() => handleViewDetails(tree.id!)}
-                        variant="outline-primary"
-                        size="sm"
-                      >
-                        Просмотреть
-                      </Button>
+        {/* КАРТОЧКИ ЗАЯВОК */}
+        <div className="tree-cards-container">
+          {filteredTrees.length === 0 ? (
+            <div className="tree-no-results">
+              <h4 className="tree-no-results-title">
+                {trees.length === 0 ? 'Заявки не найдены' : 'Заявки не найдены по выбранным фильтрам'}
+              </h4>
+              <p className="tree-no-results-text">
+                Попробуйте изменить параметры фильтрации
+              </p>
+            </div>
+          ) : (
+            <div className="tree-cards-vertical">
+              {filteredTrees.map((tree) => (
+                <Card 
+                  key={tree.id} 
+                  className="tree-request-card"
+                  onClick={() => handleViewDetails(tree.id!)}
+                >
+                  <Card.Body className="tree-card-body">
+                    {/* ГОРИЗОНТАЛЬНАЯ СТРОКА В КАРТОЧКЕ */}
+                    <div className="tree-card-horizontal-row">
+                      {/* Статус */}
+                      <div className="tree-card-column">
+                        <div className="tree-card-label">Статус</div>
+                        <div 
+                          className="tree-status-badge" 
+                          style={{ backgroundColor: getStatusColor(tree.status || 'черновик') }}
+                        >
+                          {tree.status || 'черновик'}
+                        </div>
+                      </div>
+
+                      {/* Количество аномалий */}
+                      <div className="tree-card-column">
+                        <div className="tree-card-label">Количество аномалий</div>
+                        <div className="tree-card-value tree-anomalies-count">
+                          {tree.amount_of_anomalies || 0}
+                        </div>
+                      </div>
+
+                      {/* Финальный год */}
+                      <div className="tree-card-column">
+                        <div className="tree-card-label">Финальный год</div>
+                        <div className="tree-card-value tree-final-year">
+                          {tree.final_year ? `${tree.final_year} г.` : 'Не рассчитан'}
+                        </div>
+                      </div>
+
+                      {/* Создатель (только для модератора) */}
+                      {isModerator && (
+                        <div className="tree-card-column">
+                          <div className="tree-card-label">Создатель</div>
+                          <div className="tree-card-value tree-creator">
+                            {tree.creator || 'Неизвестно'}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Модератор (только для модератора) */}
+                      {isModerator && (
+                        <div className="tree-card-column">
+                          <div className="tree-card-label">Модератор</div>
+                          <div className="tree-card-value tree-moderator">
+                            {tree.moderator || 'Не назначен'}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Кнопки для модератора */}
                       {isModerator && tree.status === 'сформирован' && (
-                        <>
-                          <Button
-                            onClick={() => handleCompleteTree(tree.id!, 'complete')}
-                            variant="outline-success"
-                            size="sm"
-                          >
-                            ✅ Завершить
-                          </Button>
-                          <Button
-                            onClick={() => handleCompleteTree(tree.id!, 'reject')}
-                            variant="outline-danger"
-                            size="sm"
-                          >
-                            ❌ Отклонить
-                          </Button>
-                        </>
+                        <div className="tree-card-column tree-actions-column">
+                          <div className="tree-card-label">Действия</div>
+                          <div className="tree-card-actions-vertical">
+                            <Button
+                              variant="primary"
+                              size="sm"
+                              className="tree-complete-button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleCompleteTree(tree.id!, 'complete');
+                              }}
+                            >
+                              Завершить
+                            </Button>
+                            <Button
+                              variant="outline-secondary"
+                              size="sm"
+                              className="tree-reject-button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleCompleteTree(tree.id!, 'reject');
+                              }}
+                            >
+                              Отклонить
+                            </Button>
+                          </div>
+                        </div>
                       )}
                     </div>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </Table>
+                  </Card.Body>
+                </Card>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
     </Container>
   );
